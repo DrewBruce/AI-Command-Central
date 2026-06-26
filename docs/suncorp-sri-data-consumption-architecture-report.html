@@ -1,0 +1,1570 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Suncorp SRI Data Consumption Architecture Report</title>
+  <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #526071;
+      --quiet: #7a8797;
+      --line: #d9e1ea;
+      --panel: #ffffff;
+      --panel-soft: #f7fafc;
+      --wash: #eef6f9;
+      --brand: #005b66;
+      --brand-2: #11899a;
+      --accent: #12a4d9;
+      --good: #147a52;
+      --warn: #a96300;
+      --risk: #b42318;
+      --purple: #5b5fc7;
+      --shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(0, 91, 102, 0.09), rgba(255, 255, 255, 0) 360px),
+        #f5f8fb;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    a {
+      color: var(--brand);
+      text-decoration: none;
+    }
+
+    .page {
+      width: min(1240px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 34px 0 56px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 22px;
+      align-items: stretch;
+      margin-bottom: 22px;
+    }
+
+    .hero-main,
+    .hero-side,
+    .section,
+    .card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+    }
+
+    .hero-main {
+      padding: 34px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-main:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(115deg, rgba(0, 91, 102, 0.1), rgba(18, 164, 217, 0.04) 42%, rgba(255, 255, 255, 0) 62%),
+        repeating-linear-gradient(90deg, rgba(0, 91, 102, 0.05) 0 1px, transparent 1px 36px);
+      pointer-events: none;
+    }
+
+    .hero-main > * {
+      position: relative;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: var(--brand);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(18, 164, 217, 0.14);
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      letter-spacing: 0;
+      line-height: 1.12;
+    }
+
+    h1 {
+      max-width: 880px;
+      font-size: clamp(34px, 5vw, 62px);
+      font-weight: 850;
+    }
+
+    h2 {
+      font-size: 27px;
+      font-weight: 820;
+    }
+
+    h3 {
+      font-size: 18px;
+      font-weight: 760;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .lead {
+      max-width: 880px;
+      margin-top: 18px;
+      color: #253244;
+      font-size: 19px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 30px;
+      padding: 6px 11px;
+      border: 1px solid rgba(0, 91, 102, 0.18);
+      border-radius: 999px;
+      color: #12303a;
+      background: rgba(255, 255, 255, 0.72);
+      font-size: 12px;
+      font-weight: 720;
+      white-space: nowrap;
+    }
+
+    .hero-side {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .verdict {
+      padding: 16px;
+      border: 1px solid rgba(20, 122, 82, 0.22);
+      background: linear-gradient(180deg, rgba(20, 122, 82, 0.1), rgba(20, 122, 82, 0.03));
+      border-radius: var(--radius);
+    }
+
+    .verdict strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--good);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .metric {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+    }
+
+    .metric .value {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--ink);
+      font-size: 24px;
+      font-weight: 840;
+      line-height: 1;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .toc {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin: 20px 0 22px;
+    }
+
+    .toc a {
+      display: flex;
+      min-height: 48px;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.82);
+      color: #1f2a38;
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .section {
+      margin-top: 18px;
+      padding: 28px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-header p {
+      max-width: 720px;
+      color: var(--muted);
+    }
+
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .card {
+      box-shadow: none;
+      padding: 16px;
+    }
+
+    .card.soft {
+      background: var(--panel-soft);
+    }
+
+    .card.good {
+      border-color: rgba(20, 122, 82, 0.24);
+      background: linear-gradient(180deg, rgba(20, 122, 82, 0.08), rgba(255, 255, 255, 0.9));
+    }
+
+    .card.warn {
+      border-color: rgba(169, 99, 0, 0.26);
+      background: linear-gradient(180deg, rgba(169, 99, 0, 0.08), rgba(255, 255, 255, 0.9));
+    }
+
+    .card.risk {
+      border-color: rgba(180, 35, 24, 0.26);
+      background: linear-gradient(180deg, rgba(180, 35, 24, 0.08), rgba(255, 255, 255, 0.9));
+    }
+
+    .kicker {
+      margin-bottom: 7px;
+      color: var(--brand);
+      font-size: 11px;
+      font-weight: 820;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .body-copy {
+      color: #253244;
+      font-size: 15px;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .callout {
+      display: grid;
+      grid-template-columns: 12px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      padding: 16px;
+      border: 1px solid rgba(0, 91, 102, 0.18);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(0, 91, 102, 0.08), rgba(255, 255, 255, 0.88));
+    }
+
+    .callout .bar {
+      width: 5px;
+      height: 100%;
+      min-height: 54px;
+      border-radius: 999px;
+      background: var(--brand-2);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      color: #26384d;
+      background: #f2f7fa;
+      font-size: 12px;
+      font-weight: 820;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 820;
+      white-space: nowrap;
+    }
+
+    .status.good {
+      color: #0f5c3f;
+      background: rgba(20, 122, 82, 0.12);
+      border: 1px solid rgba(20, 122, 82, 0.24);
+    }
+
+    .status.warn {
+      color: #7a4700;
+      background: rgba(169, 99, 0, 0.12);
+      border: 1px solid rgba(169, 99, 0, 0.25);
+    }
+
+    .status.risk {
+      color: #842019;
+      background: rgba(180, 35, 24, 0.12);
+      border: 1px solid rgba(180, 35, 24, 0.24);
+    }
+
+    .status.neutral {
+      color: #38475a;
+      background: rgba(82, 96, 113, 0.12);
+      border: 1px solid rgba(82, 96, 113, 0.22);
+    }
+
+    .option-table td:nth-child(3),
+    .option-table td:nth-child(4),
+    .option-table td:nth-child(5),
+    .option-table td:nth-child(6),
+    .option-table td:nth-child(7) {
+      text-align: center;
+      font-weight: 780;
+    }
+
+    .score {
+      display: grid;
+      gap: 10px;
+    }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr) 48px;
+      gap: 12px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .score-name {
+      color: #243244;
+      font-weight: 760;
+    }
+
+    .track {
+      height: 14px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e7eef5;
+      border: 1px solid #d8e2ec;
+    }
+
+    .bar {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--brand), var(--accent));
+    }
+
+    .score-value {
+      color: #203040;
+      font-weight: 840;
+      text-align: right;
+    }
+
+    .diagram {
+      width: 100%;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(90deg, rgba(0, 91, 102, 0.04) 1px, transparent 1px),
+        linear-gradient(rgba(0, 91, 102, 0.04) 1px, transparent 1px),
+        #fbfdff;
+      background-size: 24px 24px;
+    }
+
+    svg {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      font-family: inherit;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 680;
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: 130px repeat(5, minmax(0, 1fr));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .timeline div {
+      min-height: 54px;
+      padding: 10px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      font-size: 13px;
+    }
+
+    .timeline div:nth-child(6n) {
+      border-right: 0;
+    }
+
+    .timeline .head {
+      min-height: 42px;
+      color: #27384c;
+      background: #f2f7fa;
+      font-size: 12px;
+      font-weight: 820;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .timeline .lane {
+      color: #223044;
+      font-weight: 780;
+      background: #f9fbfd;
+    }
+
+    .lane-fill {
+      display: block;
+      min-height: 32px;
+      padding: 8px 9px;
+      border-radius: 6px;
+      color: #0d2f37;
+      background: rgba(18, 164, 217, 0.12);
+      border: 1px solid rgba(18, 164, 217, 0.22);
+      font-weight: 720;
+    }
+
+    .lane-fill.good {
+      color: #0f4b36;
+      background: rgba(20, 122, 82, 0.12);
+      border-color: rgba(20, 122, 82, 0.24);
+    }
+
+    .lane-fill.warn {
+      color: #704100;
+      background: rgba(169, 99, 0, 0.13);
+      border-color: rgba(169, 99, 0, 0.25);
+    }
+
+    .risk-grid {
+      display: grid;
+      grid-template-columns: 110px repeat(3, minmax(0, 1fr));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .risk-grid > div {
+      min-height: 72px;
+      padding: 10px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      font-size: 12px;
+    }
+
+    .risk-grid > div:nth-child(4n) {
+      border-right: 0;
+    }
+
+    .risk-grid .axis {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #31445b;
+      background: #f2f7fa;
+      font-weight: 820;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .risk-item {
+      display: block;
+      margin: 4px 0;
+      padding: 6px 7px;
+      border-radius: 6px;
+      color: #1f2d3f;
+      background: #edf3f8;
+      font-weight: 720;
+    }
+
+    .risk-item.high {
+      color: #7d1c16;
+      background: rgba(180, 35, 24, 0.12);
+      border: 1px solid rgba(180, 35, 24, 0.2);
+    }
+
+    .risk-item.med {
+      color: #704100;
+      background: rgba(169, 99, 0, 0.13);
+      border: 1px solid rgba(169, 99, 0, 0.22);
+    }
+
+    .risk-item.low {
+      color: #0f4b36;
+      background: rgba(20, 122, 82, 0.11);
+      border: 1px solid rgba(20, 122, 82, 0.2);
+    }
+
+    .quote {
+      padding: 18px 20px;
+      border-left: 5px solid var(--brand-2);
+      background: #f7fbfd;
+      color: #1e2d3f;
+      font-size: 18px;
+      font-weight: 740;
+    }
+
+    ul {
+      margin: 10px 0 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin: 7px 0;
+      color: #29384a;
+    }
+
+    .footer {
+      margin-top: 24px;
+      color: var(--quiet);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .print-note {
+      display: none;
+    }
+
+    @media (max-width: 980px) {
+      .page {
+        width: min(100% - 26px, 900px);
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .toc,
+      .grid-2,
+      .grid-3,
+      .grid-4 {
+        grid-template-columns: 1fr;
+      }
+
+      .timeline {
+        grid-template-columns: 120px repeat(5, minmax(170px, 1fr));
+        overflow-x: auto;
+      }
+
+      .section {
+        padding: 20px;
+      }
+
+      .score-row {
+        grid-template-columns: 1fr;
+      }
+
+      .score-value {
+        text-align: left;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .page {
+        width: 100%;
+        padding: 0;
+      }
+
+      .hero-main,
+      .hero-side,
+      .section,
+      .card,
+      .toc a {
+        box-shadow: none;
+      }
+
+      .toc {
+        display: none;
+      }
+
+      .section {
+        break-inside: avoid;
+        margin-top: 14px;
+      }
+
+      .print-note {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero" aria-labelledby="title">
+      <div class="hero-main">
+        <div class="eyebrow"><span class="dot"></span>Solution architecture report</div>
+        <h1 id="title">Suncorp SRI Data Consumption Architecture</h1>
+        <p class="lead">
+          A decision-grade architecture report for consuming DC reinsurance data now, surviving the forced end-2027 Clarity move, and limiting rework across CDP acquisition and downstream consumers.
+        </p>
+        <div class="hero-meta">
+          <span class="pill">Prepared: 26 June 2026</span>
+          <span class="pill">Status: Draft for DC validation</span>
+          <span class="pill">Decision: Canonical SRI layer plus adapters</span>
+          <span class="pill">Confidence: Medium-high</span>
+        </div>
+      </div>
+      <aside class="hero-side" aria-label="Executive verdict">
+        <div class="verdict">
+          <strong>Recommended posture</strong>
+          Build a Suncorp-owned SRI canonical acquisition layer and feed it through replaceable source adapters. Use S3 parquet tactically if it becomes available first; cut over to Clarity Silver only after field coverage is proven.
+        </div>
+        <div class="metric-grid">
+          <div class="metric">
+            <span class="value">2027</span>
+            <span class="label">Hard target for Clarity end state - verify with DC</span>
+          </div>
+          <div class="metric">
+            <span class="value">4</span>
+            <span class="label">Viable options assessed</span>
+          </div>
+          <div class="metric">
+            <span class="value">70%</span>
+            <span class="label">Recommendation confidence</span>
+          </div>
+          <div class="metric">
+            <span class="value">5</span>
+            <span class="label">Decision gates before cutover</span>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <nav class="toc" aria-label="Report sections">
+      <a href="#executive-summary">Executive Summary</a>
+      <a href="#facts">Facts &amp; Unknowns</a>
+      <a href="#options">Options &amp; Scorecard</a>
+      <a href="#architecture">Recommended Architecture</a>
+      <a href="#roadmap">Sequencing &amp; Delivery</a>
+      <a href="#risks">Risks</a>
+      <a href="#questions">DC Questions</a>
+      <a href="#effort">Effort</a>
+      <a href="#governance">Governance</a>
+      <a href="#appendix">Appendix</a>
+    </nav>
+
+    <section class="section" id="executive-summary">
+      <div class="section-header">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>Executive summary</div>
+          <h2>The decision is not S3 versus Clarity. It is how to avoid rebuilding downstream data consumers when DC changes the pipe.</h2>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card good">
+          <div class="kicker">Recommendation</div>
+          <h3>Adopt a Suncorp canonical SRI acquisition layer</h3>
+          <p class="body-copy">
+            Suncorp should decouple downstream consumption from DC's delivery format. The durable asset should be a Suncorp-controlled SRI model with adapters from S3 parquet, Clarity Silver, and any approved exception source.
+          </p>
+        </div>
+        <div class="card warn">
+          <div class="kicker">Tactical bridge</div>
+          <h3>Use S3 only as a short-lived source adapter</h3>
+          <p class="body-copy">
+            Direct S3 Bronze parquet is the best near-term route if SRI tables reach general availability, but it should not become the downstream contract because DC intends to retire the option at end-2027.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top: 14px;">
+        <div class="bar"></div>
+        <div>
+          <h3>CFO-readable problem statement</h3>
+          <p class="body-copy">
+            Suncorp needs reinsurance information soon enough to support business use, but the supplier's required future product path may not contain the detail Suncorp needs. The architecture should let Suncorp take the earliest viable feed without paying for repeated downstream rebuilds when the supplier changes the data product.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid-4" style="margin-top: 14px;">
+        <div class="card soft">
+          <div class="kicker">Default</div>
+          <h3>Canonical model</h3>
+          <p class="small">One Suncorp-owned SRI contract for CDP and downstream users.</p>
+        </div>
+        <div class="card soft">
+          <div class="kicker">Bridge</div>
+          <h3>S3 adapter</h3>
+          <p class="small">Use only if SRI objects are productised before the window becomes uneconomic.</p>
+        </div>
+        <div class="card soft">
+          <div class="kicker">End state</div>
+          <h3>Clarity adapter</h3>
+          <p class="small">Adopt after Silver field coverage, semantics, and lineage are verified.</p>
+        </div>
+        <div class="card soft">
+          <div class="kicker">Exception</div>
+          <h3>Oracle mirror</h3>
+          <p class="small">Keep as a fallback only if DC confirms CDC is supported and contractually allowed.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="facts">
+      <div class="section-header">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>Fact base and absence sweep</div>
+          <h2>What is resolved, what is open, and what must be verified before funding a path.</h2>
+        </div>
+        <p>Vendor roadmap items are from the supplied working session and must be verified with DC because capability, product dates, licensing, and retirement commitments may have changed.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Resolved facts from the session</h3>
+          <ul>
+            <li>S3 parquet and Clarity Bronze are fed by the same pipe: Oracle redo logs to CDC to parquet to S3 to Snowflake to BRONZE_INPUT.</li>
+            <li>General availability means a standard product feature of DC SaaS, not a customer-specific build.</li>
+            <li>S3 is independent of Clarity as a consumption route, while Clarity is already live for other DC AD DCRM customers.</li>
+            <li>DC intends to retire S3 at end-2027, with Clarity as the mandated end state.</li>
+            <li>Via Clarity, DC will expose Silver only, not Bronze.</li>
+            <li>Prior DI experience indicates Silver did not contain all data Suncorp required, forcing Bronze consumption.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Unresolved core issues</h3>
+          <ul>
+            <li>Layer mismatch: the mandated end state is the historically weaker layer for Suncorp's detailed data needs.</li>
+            <li>SRI objects are not yet GA anywhere, so every path depends on DC productising them.</li>
+            <li>Model differences across S3 parquet, Bronze Input, and Silver can cascade rework into CDP and downstream.</li>
+            <li>S3's usable window may be too short if GA lands around December 2026 and retirement remains end-2027.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 14px;">
+        <h3>Completeness sweep</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>Status</th>
+              <th>Current reading</th>
+              <th>Decision implication</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Non-functional requirements</td>
+              <td><span class="status warn">OPEN</span></td>
+              <td>Freshness, latency, volume, schema-change tolerance, and reconciliation thresholds are not yet stated.</td>
+              <td>Set as entry criteria before production ingestion design.</td>
+            </tr>
+            <tr>
+              <td>Security and privacy obligations</td>
+              <td><span class="status warn">OPEN</span></td>
+              <td>Access model, encryption, audit logging, and data classification need confirmation.</td>
+              <td>Could alter source selection and adapter pattern.</td>
+            </tr>
+            <tr>
+              <td>Data migration scope</td>
+              <td><span class="status neutral">ASSUMED</span></td>
+              <td>Assume no historic backload is committed until DC confirms available history per source.</td>
+              <td>Backfill may become a separate workstream.</td>
+            </tr>
+            <tr>
+              <td>Integration contracts</td>
+              <td><span class="status risk">OPEN</span></td>
+              <td>Field-level contract for SRI is not yet proven for S3 or Clarity Silver.</td>
+              <td>This is the main decision blocker.</td>
+            </tr>
+            <tr>
+              <td>Operational support model</td>
+              <td><span class="status warn">OPEN</span></td>
+              <td>Ownership across DC, CDP, data consumers, and incident support is not defined.</td>
+              <td>Needed before live run and cutover.</td>
+            </tr>
+            <tr>
+              <td>Licensing and commercial limits</td>
+              <td><span class="status warn">VERIFY</span></td>
+              <td>Current vendor licensing and availability may have changed.</td>
+              <td>Validate before treating any option as viable.</td>
+            </tr>
+            <tr>
+              <td>Disaster recovery</td>
+              <td><span class="status neutral">ASSUMED</span></td>
+              <td>Assume Suncorp CDP resilience patterns apply after acquisition, but source recovery obligations remain open.</td>
+              <td>Include in runbook and service agreement.</td>
+            </tr>
+            <tr>
+              <td>Post-go-live ownership</td>
+              <td><span class="status warn">OPEN</span></td>
+              <td>Canonical model stewardship and schema-change approval rights need explicit assignment.</td>
+              <td>Without this, rework risk reappears under a different name.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="options">
+      <div class="section-header">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>Options considered</div>
+          <h2>The best architecture is the one that turns DC source changes into adapter changes, not enterprise rework.</h2>
+        </div>
+        <p>Scores are architecture judgement based on the provided facts. They are not vendor-verified and should be recalibrated after DC provides dates, samples, and field-level commitments.</p>
+      </div>
+
+      <div class="card">
+        <table class="option-table">
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Role</th>
+              <th>Near-term access</th>
+              <th>End-2027 viability</th>
+              <th>Rework control</th>
+              <th>DC dependency</th>
+              <th>Overall</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Option 0 - Wait for Clarity</strong></td>
+              <td>Do least / defer build</td>
+              <td>1</td>
+              <td>4</td>
+              <td>2</td>
+              <td>1</td>
+              <td><span class="status risk">Not recommended</span></td>
+            </tr>
+            <tr>
+              <td><strong>Option 1 - Direct S3 Bronze parquet</strong></td>
+              <td>Tactical bridge</td>
+              <td>4</td>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td><span class="status warn">Use with guardrails</span></td>
+            </tr>
+            <tr>
+              <td><strong>Option 2 - Clarity Silver only</strong></td>
+              <td>Mandated future source</td>
+              <td>2</td>
+              <td>4</td>
+              <td>2</td>
+              <td>1</td>
+              <td><span class="status warn">Not safe yet</span></td>
+            </tr>
+            <tr>
+              <td><strong>Option 3 - Mirrored Oracle RDS</strong></td>
+              <td>Exception path</td>
+              <td>2</td>
+              <td>2</td>
+              <td>3</td>
+              <td>1</td>
+              <td><span class="status risk">Likely non-viable</span></td>
+            </tr>
+            <tr>
+              <td><strong>Option 4 - Canonical SRI layer with adapters</strong></td>
+              <td>Recommended architecture</td>
+              <td>4</td>
+              <td>4</td>
+              <td>5</td>
+              <td>3</td>
+              <td><span class="status good">Recommended</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid-2" style="margin-top: 14px;">
+        <div class="card">
+          <h3>Weighted option score</h3>
+          <p class="small" style="margin: 4px 0 16px;">Weights: near-term access 25%, end-2027 viability 25%, rework containment 25%, dependency control 15%, delivery risk 10%.</p>
+          <div class="score" aria-label="Weighted option scores">
+            <div class="score-row">
+              <span class="score-name">Canonical layer + adapters</span>
+              <span class="track"><span class="bar" style="width: 82%;"></span></span>
+              <span class="score-value">82</span>
+            </div>
+            <div class="score-row">
+              <span class="score-name">Direct S3 parquet</span>
+              <span class="track"><span class="bar" style="width: 58%; background: linear-gradient(90deg, #a96300, #f5b84b);"></span></span>
+              <span class="score-value">58</span>
+            </div>
+            <div class="score-row">
+              <span class="score-name">Clarity Silver only</span>
+              <span class="track"><span class="bar" style="width: 52%; background: linear-gradient(90deg, #a96300, #f5b84b);"></span></span>
+              <span class="score-value">52</span>
+            </div>
+            <div class="score-row">
+              <span class="score-name">Mirrored Oracle RDS</span>
+              <span class="track"><span class="bar" style="width: 42%; background: linear-gradient(90deg, #b42318, #f97066);"></span></span>
+              <span class="score-value">42</span>
+            </div>
+            <div class="score-row">
+              <span class="score-name">Wait for Clarity</span>
+              <span class="track"><span class="bar" style="width: 36%; background: linear-gradient(90deg, #b42318, #f97066);"></span></span>
+              <span class="score-value">36</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Recommendation with switch conditions</h3>
+          <p class="body-copy">
+            Default to Option 4. Switch only if DC proves that Clarity Silver has complete SRI field coverage by a committed date, or if S3 SRI GA slips so late that the remaining pre-retirement window is not worth funding.
+          </p>
+          <ul>
+            <li><strong>Switch toward Clarity-first</strong> if Silver samples prove complete field coverage, lineage, timeliness, and support.</li>
+            <li><strong>Switch away from S3 bridge</strong> if S3 SRI GA is later than the point where dual-build cost exceeds business benefit.</li>
+            <li><strong>Reopen Oracle mirror</strong> only if DC confirms CDC support, contractual access, and operational ownership.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="architecture">
+      <div class="section-header">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>Recommended solution design</div>
+          <h2>A replaceable-source architecture, not a source-shaped downstream architecture.</h2>
+        </div>
+        <p>The logical architecture deliberately keeps DC source formats outside the enduring downstream contract.</p>
+      </div>
+
+      <div class="diagram" aria-label="Recommended logical architecture diagram">
+        <svg viewBox="0 0 1180 610" role="img" aria-labelledby="arch-title arch-desc">
+          <title id="arch-title">Recommended SRI logical architecture</title>
+          <desc id="arch-desc">DC sources feed source adapters. Adapters map into a Suncorp canonical SRI model, which is validated and published into CDP and downstream consumers.</desc>
+          <defs>
+            <marker id="arrow" markerWidth="11" markerHeight="11" refX="10" refY="5.5" orient="auto">
+              <path d="M0,0 L11,5.5 L0,11 z" fill="#31576b"></path>
+            </marker>
+            <filter id="softShadow" x="-10%" y="-10%" width="120%" height="140%">
+              <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#0f172a" flood-opacity="0.13"></feDropShadow>
+            </filter>
+          </defs>
+
+          <rect x="24" y="24" width="1132" height="562" rx="12" fill="rgba(255,255,255,0.78)" stroke="#d9e1ea"></rect>
+          <text x="54" y="62" fill="#005b66" font-size="15" font-weight="800">DC SOURCE ESTATE</text>
+          <text x="474" y="62" fill="#005b66" font-size="15" font-weight="800">SUNCORP CONTROLLED ACQUISITION</text>
+          <text x="868" y="62" fill="#005b66" font-size="15" font-weight="800">CDP AND DOWNSTREAM USE</text>
+
+          <rect x="54" y="100" width="220" height="86" rx="8" fill="#ffffff" stroke="#b8c8d9" filter="url(#softShadow)"></rect>
+          <text x="74" y="132" fill="#0f172a" font-size="17" font-weight="800">DC operational data</text>
+          <text x="74" y="157" fill="#526071" font-size="13">Oracle redo logs, CDC, source records</text>
+
+          <rect x="54" y="236" width="220" height="86" rx="8" fill="#f6fbfd" stroke="#8bbdca" filter="url(#softShadow)"></rect>
+          <text x="74" y="268" fill="#0f172a" font-size="17" font-weight="800">S3 parquet feed</text>
+          <text x="74" y="293" fill="#526071" font-size="13">Tactical Bronze-like source</text>
+
+          <rect x="54" y="372" width="220" height="86" rx="8" fill="#f7f8ff" stroke="#babef0" filter="url(#softShadow)"></rect>
+          <text x="74" y="404" fill="#0f172a" font-size="17" font-weight="800">Clarity Silver</text>
+          <text x="74" y="429" fill="#526071" font-size="13">Mandated future source - verify</text>
+
+          <rect x="54" y="494" width="220" height="58" rx="8" fill="#fff8ef" stroke="#e3bd83" filter="url(#softShadow)"></rect>
+          <text x="74" y="526" fill="#0f172a" font-size="17" font-weight="800">Oracle mirror exception</text>
+
+          <rect x="382" y="196" width="224" height="216" rx="10" fill="#ffffff" stroke="#8bbdca" filter="url(#softShadow)"></rect>
+          <text x="410" y="232" fill="#0f172a" font-size="18" font-weight="850">Source adapter layer</text>
+          <text x="410" y="261" fill="#526071" font-size="13">S3 adapter</text>
+          <text x="410" y="286" fill="#526071" font-size="13">Clarity adapter</text>
+          <text x="410" y="311" fill="#526071" font-size="13">Exception adapter</text>
+          <text x="410" y="344" fill="#005b66" font-size="13" font-weight="800">Maps source shape to</text>
+          <text x="410" y="366" fill="#005b66" font-size="13" font-weight="800">Suncorp SRI contract</text>
+
+          <rect x="674" y="176" width="206" height="108" rx="10" fill="#ecfbf6" stroke="#82c7a7" filter="url(#softShadow)"></rect>
+          <text x="704" y="213" fill="#0f172a" font-size="18" font-weight="850">Canonical SRI model</text>
+          <text x="704" y="242" fill="#526071" font-size="13">Stable Suncorp-owned contract</text>
+
+          <rect x="674" y="336" width="206" height="108" rx="10" fill="#fff8ef" stroke="#e3bd83" filter="url(#softShadow)"></rect>
+          <text x="704" y="373" fill="#0f172a" font-size="18" font-weight="850">Data quality controls</text>
+          <text x="704" y="402" fill="#526071" font-size="13">Reconcile, lineage, exceptions</text>
+
+          <rect x="956" y="190" width="150" height="88" rx="10" fill="#ffffff" stroke="#b8c8d9" filter="url(#softShadow)"></rect>
+          <text x="984" y="226" fill="#0f172a" font-size="18" font-weight="850">CDP layer</text>
+          <text x="984" y="252" fill="#526071" font-size="13">Acquisition and publish</text>
+
+          <rect x="956" y="344" width="150" height="88" rx="10" fill="#ffffff" stroke="#b8c8d9" filter="url(#softShadow)"></rect>
+          <text x="984" y="380" fill="#0f172a" font-size="18" font-weight="850">Consumers</text>
+          <text x="984" y="406" fill="#526071" font-size="13">Analytics, reporting, ops</text>
+
+          <line x1="274" y1="143" x2="362" y2="250" stroke="#31576b" stroke-width="2.5" marker-end="url(#arrow)"></line>
+          <text x="287" y="186" fill="#31576b" font-size="12" font-weight="700">feeds</text>
+
+          <line x1="274" y1="279" x2="362" y2="279" stroke="#31576b" stroke-width="2.5" marker-end="url(#arrow)"></line>
+          <text x="297" y="267" fill="#31576b" font-size="12" font-weight="700">ingests</text>
+
+          <line x1="274" y1="415" x2="362" y2="352" stroke="#31576b" stroke-width="2.5" marker-end="url(#arrow)"></line>
+          <text x="296" y="399" fill="#31576b" font-size="12" font-weight="700">maps</text>
+
+          <line x1="274" y1="523" x2="362" y2="382" stroke="#a96300" stroke-width="2.5" stroke-dasharray="6 6" marker-end="url(#arrow)"></line>
+          <text x="287" y="484" fill="#a96300" font-size="12" font-weight="700">exception</text>
+
+          <line x1="606" y1="250" x2="654" y2="230" stroke="#31576b" stroke-width="2.5" marker-end="url(#arrow)"></line>
+          <text x="617" y="222" fill="#31576b" font-size="12" font-weight="700">normalises</text>
+
+          <line x1="777" y1="284" x2="777" y2="316" stroke="#31576b" stroke-width="2.5" marker-end="url(#arrow)"></line>
+          <text x="790" y="304" fill="#31576b" font-size="12" font-weight="700">validates</text>
+
+          <line x1="880" y1="230" x2="936" y2="232" stroke="#31576b" stroke-width="2.5" marker-end="url(#arrow)"></line>
+          <text x="891" y="218" fill="#31576b" font-size="12" font-weight="700">publishes</text>
+
+          <line x1="1031" y1="278" x2="1031" y2="324" stroke="#31576b" stroke-width="2.5" marker-end="url(#arrow)"></line>
+          <text x="1044" y="307" fill="#31576b" font-size="12" font-weight="700">serves</text>
+
+          <line x1="880" y1="390" x2="936" y2="388" stroke="#31576b" stroke-width="2.5" marker-end="url(#arrow)"></line>
+          <text x="890" y="411" fill="#31576b" font-size="12" font-weight="700">alerts</text>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><i class="swatch" style="background:#f6fbfd; border:1px solid #8bbdca;"></i>Tactical near-term feed</span>
+        <span><i class="swatch" style="background:#f7f8ff; border:1px solid #babef0;"></i>Mandated future source</span>
+        <span><i class="swatch" style="background:#ecfbf6; border:1px solid #82c7a7;"></i>Suncorp-controlled enduring contract</span>
+        <span><i class="swatch" style="background:#fff8ef; border:1px solid #e3bd83;"></i>Exception / control path</span>
+      </div>
+
+      <div class="grid-3" style="margin-top: 14px;">
+        <div class="card">
+          <div class="kicker">Principle 1</div>
+          <h3>Preserve downstream stability</h3>
+          <p class="small">Sacrifice: initial build is slightly larger than direct S3 ingestion. Benefit: DC source changes are isolated.</p>
+        </div>
+        <div class="card">
+          <div class="kicker">Principle 2</div>
+          <h3>Prove field coverage before cutover</h3>
+          <p class="small">Sacrifice: Clarity cannot be accepted as end state on roadmap promise alone.</p>
+        </div>
+        <div class="card">
+          <div class="kicker">Principle 3</div>
+          <h3>Dual-run before source retirement</h3>
+          <p class="small">Sacrifice: temporary operating cost. Benefit: avoids blind cutover into a lossy model.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="roadmap">
+      <div class="section-header">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>Flows and sequencing</div>
+          <h2>Move in gates: prove the contract, build the bridge, then cut over only when Clarity is materially equivalent.</h2>
+        </div>
+        <p>Dates are indicative and must be reset from actual DC confirmation. The key is sequencing discipline, not the specific month labels.</p>
+      </div>
+
+      <div class="timeline" role="img" aria-label="Delivery sequencing timeline">
+        <div class="head">Workstream</div>
+        <div class="head">Now to Q3 2026</div>
+        <div class="head">Q4 2026</div>
+        <div class="head">H1 2027</div>
+        <div class="head">H2 2027</div>
+        <div class="head">End-2027</div>
+
+        <div class="lane">Decision gates</div>
+        <div><span class="lane-fill warn">G0: DC written commitments</span></div>
+        <div><span class="lane-fill">G1: SRI sample contract</span></div>
+        <div><span class="lane-fill">G2: Production bridge readiness</span></div>
+        <div><span class="lane-fill good">G3: Clarity equivalence proof</span></div>
+        <div><span class="lane-fill good">G4: Cutover approval</span></div>
+
+        <div class="lane">S3 bridge</div>
+        <div><span class="lane-fill warn">Confirm GA, schemas, history</span></div>
+        <div><span class="lane-fill">Build S3 adapter</span></div>
+        <div><span class="lane-fill">Operate and monitor</span></div>
+        <div><span class="lane-fill warn">Freeze new dependency</span></div>
+        <div><span class="lane-fill warn">Retire after cutover</span></div>
+
+        <div class="lane">Clarity path</div>
+        <div><span class="lane-fill warn">Request Silver model plan</span></div>
+        <div><span class="lane-fill warn">Review modelling gaps</span></div>
+        <div><span class="lane-fill">Build Clarity adapter</span></div>
+        <div><span class="lane-fill good">Dual-run reconciliation</span></div>
+        <div><span class="lane-fill good">Make primary source</span></div>
+
+        <div class="lane">Suncorp model</div>
+        <div><span class="lane-fill good">Define canonical SRI contract</span></div>
+        <div><span class="lane-fill good">Implement quality controls</span></div>
+        <div><span class="lane-fill good">Publish to CDP</span></div>
+        <div><span class="lane-fill good">Stabilise consumer contract</span></div>
+        <div><span class="lane-fill good">Own as enduring asset</span></div>
+      </div>
+
+      <div class="grid-2" style="margin-top: 14px;">
+        <div class="card">
+          <h3>Near-term S3 flow</h3>
+          <ol>
+            <li>DC publishes SRI tables to S3 parquet under a productised GA commitment.</li>
+            <li>Suncorp S3 adapter reads source files and captures schema/version metadata.</li>
+            <li>Adapter maps records into the canonical SRI acquisition model.</li>
+            <li>Quality controls reconcile record counts, mandatory fields, reference values, and late-arriving changes.</li>
+            <li>CDP publishes the stable SRI contract to downstream consumers.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>End-state Clarity flow</h3>
+          <ol>
+            <li>DC provides Clarity Silver SRI samples, lineage, and field definitions.</li>
+            <li>Suncorp compares Silver against required canonical SRI fields and S3 output.</li>
+            <li>Clarity adapter maps Silver into the same canonical SRI model.</li>
+            <li>S3 and Clarity run in parallel until reconciliation thresholds are met.</li>
+            <li>Architecture authority approves source cutover and controlled S3 retirement.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="quote" style="margin-top: 14px;">
+        Cutover should be based on data equivalence and operational readiness, not on the calendar alone.
+      </div>
+    </section>
+
+    <section class="section" id="risks">
+      <div class="section-header">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>Risk profile</div>
+          <h2>The highest risks are vendor-product timing and data completeness, not integration mechanics.</h2>
+        </div>
+      </div>
+
+      <div class="risk-grid" aria-label="Risk heatmap">
+        <div class="axis">Impact / Likelihood</div>
+        <div class="axis">Low</div>
+        <div class="axis">Medium</div>
+        <div class="axis">High</div>
+
+        <div class="axis">High impact</div>
+        <div></div>
+        <div>
+          <span class="risk-item med">R3 S3 retirement remains hard</span>
+          <span class="risk-item med">R6 Cutover reconciliation fails</span>
+        </div>
+        <div>
+          <span class="risk-item high">R1 SRI GA slips</span>
+          <span class="risk-item high">R2 Silver lacks required fields</span>
+          <span class="risk-item high">R4 Data model churn cascades</span>
+        </div>
+
+        <div class="axis">Medium impact</div>
+        <div>
+          <span class="risk-item low">R8 Consumer adoption delay</span>
+        </div>
+        <div>
+          <span class="risk-item med">R5 Ownership unclear</span>
+          <span class="risk-item med">R7 Licensing or access limits</span>
+        </div>
+        <div></div>
+
+        <div class="axis">Low impact</div>
+        <div></div>
+        <div>
+          <span class="risk-item low">R9 Report formatting churn</span>
+        </div>
+        <div></div>
+      </div>
+
+      <div class="card" style="margin-top: 14px;">
+        <h3>Top risk register</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Risk</th>
+              <th>Owner type</th>
+              <th>Trigger</th>
+              <th>Mitigation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>R1</td>
+              <td>SRI tables do not reach GA in S3 early enough to justify the bridge.</td>
+              <td>Vendor manager plus data product owner</td>
+              <td>DC cannot commit S3 SRI GA date and sample data.</td>
+              <td>Stop S3 build; redirect to Clarity proof or formal exception path.</td>
+            </tr>
+            <tr>
+              <td>R2</td>
+              <td>Clarity Silver omits required SRI fields or changes semantics.</td>
+              <td>Data architect plus business data owner</td>
+              <td>Field comparison shows gaps against canonical SRI contract.</td>
+              <td>Raise DC product gap; keep canonical contract stable; require field-level remediation plan.</td>
+            </tr>
+            <tr>
+              <td>R3</td>
+              <td>S3 retirement is hard at end-2027, compressing the migration window.</td>
+              <td>Architecture sponsor</td>
+              <td>DC confirms no extension or informal persistence.</td>
+              <td>Timebox bridge scope; prioritise Clarity adapter and dual-run readiness.</td>
+            </tr>
+            <tr>
+              <td>R4</td>
+              <td>Data model changes force CDP and downstream rework.</td>
+              <td>CDP product owner</td>
+              <td>Consumers bind directly to S3, Bronze Input, or Silver structures.</td>
+              <td>Mandate canonical SRI model as the only downstream contract.</td>
+            </tr>
+            <tr>
+              <td>R5</td>
+              <td>Operational ownership of schema change, incidents, and reconciliation remains unclear.</td>
+              <td>Service owner</td>
+              <td>No RACI before production readiness review.</td>
+              <td>Create runbook, support model, and schema-change decision rights before go-live.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="questions">
+      <div class="section-header">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>DC confirmation pack</div>
+          <h2>The decision should be gated by written vendor evidence, not roadmap interpretation.</h2>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <h3>Productisation and dates</h3>
+          <ul>
+            <li>Will SRI tables reach GA in S3, and on what committed date?</li>
+            <li>Will the same SRI objects reach GA in Clarity Silver, and on what committed date?</li>
+            <li>Is end-2027 S3 retirement hard, or can S3 persist under exception?</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Data content and lineage</h3>
+          <ul>
+            <li>Provide field-level samples for S3 parquet and Clarity Silver.</li>
+            <li>Provide lineage from operational object to Silver field.</li>
+            <li>Confirm whether Silver contains all Suncorp-required SRI fields and history.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Technical and commercial viability</h3>
+          <ul>
+            <li>How is data reaching Clarity today if S3 is not GA until December?</li>
+            <li>Is mirrored Oracle RDS with CDC technically supported and contractually permitted?</li>
+            <li>What are support, access, licensing, security, and service limits for each path?</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="effort">
+      <div class="section-header">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>Development effort</div>
+          <h2>Estimate by workstream, with ranges because the dominant uncertainty is DC field coverage and source availability.</h2>
+        </div>
+      </div>
+
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Workstream</th>
+              <th>Indicative effort</th>
+              <th>Dominant assumption</th>
+              <th>Exit criteria</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Canonical SRI model and field contract</td>
+              <td>3-6 weeks</td>
+              <td>Business SMEs can confirm required SRI fields and definitions quickly.</td>
+              <td>Approved model, mandatory fields, reference data, lineage requirements, versioning rules.</td>
+            </tr>
+            <tr>
+              <td>S3 source adapter</td>
+              <td>4-8 weeks</td>
+              <td>SRI S3 parquet GA arrives with stable schema, sample data, and access path.</td>
+              <td>Ingestion, mapping, metadata capture, quality controls, and monitoring in lower environment.</td>
+            </tr>
+            <tr>
+              <td>Clarity Silver adapter</td>
+              <td>5-10 weeks</td>
+              <td>Silver contains sufficient SRI detail; gaps are few and resolvable.</td>
+              <td>Adapter produces same canonical output as S3 within reconciliation tolerance.</td>
+            </tr>
+            <tr>
+              <td>Reconciliation and controls</td>
+              <td>3-6 weeks</td>
+              <td>DC provides source counts, change markers, and field lineage.</td>
+              <td>Automated checks, exception handling, and runbook accepted by support owner.</td>
+            </tr>
+            <tr>
+              <td>Consumer migration and cutover</td>
+              <td>4-9 weeks</td>
+              <td>Consumers bind to canonical model, not source-specific structures.</td>
+              <td>Dual-run sign-off, downstream test pass, cutover approval, rollback plan.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="governance">
+      <div class="section-header">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>Governance and operating model</div>
+          <h2>Decision rights must sit around the canonical model, because that is the control point that limits rework.</h2>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Decision rights</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Decision</th>
+                <th>Recommended owner</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Canonical SRI field contract</td>
+                <td>Suncorp data product owner with architecture approval</td>
+              </tr>
+              <tr>
+                <td>Source adapter acceptance</td>
+                <td>Data architecture plus CDP engineering</td>
+              </tr>
+              <tr>
+                <td>Clarity cutover</td>
+                <td>Architecture sponsor, business data owner, service owner</td>
+              </tr>
+              <tr>
+                <td>DC product gap escalation</td>
+                <td>Vendor manager with business sponsor</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Success metrics</h3>
+          <ul>
+            <li>100% of mandatory SRI fields mapped into canonical model.</li>
+            <li>Record-count reconciliation within agreed tolerance for each load.</li>
+            <li>Zero downstream consumers bound directly to S3 parquet or Clarity Silver structures.</li>
+            <li>Schema change impact contained to adapter and canonical model governance.</li>
+            <li>Dual-run exit achieved before S3 retirement or extension decision point.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-top: 14px;">
+        <div class="card good">
+          <div class="kicker">First move</div>
+          <h3>Lock the SRI field contract</h3>
+          <p class="small">Before debating source choice, define the Suncorp-required SRI data contract and mandatory reconciliation rules.</p>
+        </div>
+        <div class="card warn">
+          <div class="kicker">Second move</div>
+          <h3>Demand DC evidence</h3>
+          <p class="small">Ask for written GA timelines, sample data, lineage, access constraints, and retirement commitments.</p>
+        </div>
+        <div class="card soft">
+          <div class="kicker">Third move</div>
+          <h3>Prototype the adapter</h3>
+          <p class="small">Build the smallest source adapter needed to prove the canonical model and quality controls.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="appendix">
+      <div class="section-header">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>Appendix</div>
+          <h2>Definitions, assumptions, and self-audit.</h2>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Definitions</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Term</th>
+                <th>Meaning in this report</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>DC</td>
+                <td>The vendor/source platform referenced in the supplied session notes.</td>
+              </tr>
+              <tr>
+                <td>SRI</td>
+                <td>Suncorp reinsurance data objects required for consumption.</td>
+              </tr>
+              <tr>
+                <td>CDP</td>
+                <td>Suncorp's data platform/acquisition and downstream publishing layer.</td>
+              </tr>
+              <tr>
+                <td>Bronze</td>
+                <td>Raw or near-source data layer, typically closer to operational structures.</td>
+              </tr>
+              <tr>
+                <td>Silver</td>
+                <td>Business-modelled vendor data layer that may transform or omit operational detail.</td>
+              </tr>
+              <tr>
+                <td>GA</td>
+                <td>General availability: a standard productised DC SaaS feature, not a one-off custom build.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>Assumptions and verification warnings</h3>
+          <ul>
+            <li>ASSUMED: The supplied facts represent the current working understanding from the session.</li>
+            <li>VERIFY: DC roadmap dates, GA status, licensing, support limits, and retirement commitments may have changed.</li>
+            <li>ASSUMED: Suncorp has enough CDP control to introduce a canonical SRI acquisition layer.</li>
+            <li>OPEN: Required SRI field list, history depth, latency, volume, and reconciliation tolerances.</li>
+            <li>OPEN: Whether DC will remediate Clarity Silver gaps if they are proven.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 14px;">
+        <h3>Chat self-audit</h3>
+        <ul>
+          <li>Recommendation is committed, with named switch conditions.</li>
+          <li>Vendor capability is not treated as verified; current capability and roadmap are marked for DC confirmation.</li>
+          <li>Single-point estimates are avoided; effort is given in ranges with dominant assumptions.</li>
+          <li>The recommended principles name their sacrifice.</li>
+          <li>Business-reader acronyms and data-layer terms are explained.</li>
+        </ul>
+      </div>
+    </section>
+
+    <p class="footer">
+      Suncorp SRI Data Consumption Architecture Report - draft decision pack for internal review and DC validation.
+    </p>
+  </main>
+</body>
+</html>

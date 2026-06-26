@@ -1,0 +1,14 @@
+node_modules/
+dist/
+output/
+.playwright-cli/
+.playwright-mcp/
+src-tauri/target/
+
+.DS_Store
+**/.DS_Store
+.env
+.env.*
+!.env.example
+
+ai-command-central-runs-report.png
