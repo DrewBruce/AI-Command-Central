@@ -1,0 +1,90 @@
+<svg width="1400" height="820" viewBox="0 0 1400 820" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Local-first architecture</title>
+  <desc id="desc">A system architecture diagram showing the React command surface, Tauri Rust backend, SQLite store, local project scanner, model providers, and local report writer.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1400" y2="820" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#070A0E"/>
+      <stop offset="1" stop-color="#0B1016"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 10 5 0 10Z" fill="#8293A3"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="820" rx="28" fill="url(#bg)"/>
+  <rect x="42" y="42" width="1316" height="736" rx="24" fill="#0B1016" stroke="#243241"/>
+  <text x="80" y="102" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="38" font-weight="850">Local-first architecture</text>
+  <text x="80" y="140" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="18">Project state stays on the machine; models and tools plug into a controlled runner surface.</text>
+
+  <g stroke="#8293A3" stroke-width="3" marker-end="url(#arrow)" opacity="0.7">
+    <path d="M342 268H488"/>
+    <path d="M686 268H830"/>
+    <path d="M1028 268H1170"/>
+    <path d="M686 430H830"/>
+    <path d="M1028 430H1170"/>
+    <path d="M686 590H830"/>
+    <path d="M514 330C450 406 438 500 514 570"/>
+    <path d="M604 570C668 494 674 400 604 330"/>
+  </g>
+
+  <g transform="translate(90 210)">
+    <rect width="252" height="116" rx="18" fill="#101720" stroke="#5FD2E8" stroke-opacity="0.35"/>
+    <text x="24" y="36" fill="#9CE6F0" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="850">FRONTEND</text>
+    <text x="24" y="70" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="25" font-weight="850">React command UI</text>
+    <text x="24" y="96" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">Projects, workflows, agents, runs</text>
+  </g>
+
+  <g transform="translate(488 198)">
+    <rect width="198" height="140" rx="18" fill="#101720" stroke="#91A7FF" stroke-opacity="0.38"/>
+    <text x="24" y="38" fill="#91A7FF" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="850">NATIVE SHELL</text>
+    <text x="24" y="72" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="25" font-weight="850">Tauri 2</text>
+    <text x="24" y="100" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">Secure app bridge</text>
+    <text x="24" y="122" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">Desktop runtime</text>
+  </g>
+
+  <g transform="translate(830 198)">
+    <rect width="198" height="140" rx="18" fill="#101720" stroke="#72D39B" stroke-opacity="0.38"/>
+    <text x="24" y="38" fill="#72D39B" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="850">BACKEND</text>
+    <text x="24" y="72" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="25" font-weight="850">Rust services</text>
+    <text x="24" y="100" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">Scanner, runner, launchers</text>
+    <text x="24" y="122" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">Provider adapters</text>
+  </g>
+
+  <g transform="translate(1170 198)">
+    <rect width="150" height="140" rx="18" fill="#101720" stroke="#F3C55C" stroke-opacity="0.38"/>
+    <text x="22" y="38" fill="#F3C55C" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="850">STORE</text>
+    <text x="22" y="72" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="25" font-weight="850">SQLite</text>
+    <text x="22" y="100" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">Projects</text>
+    <text x="22" y="122" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">Runs, agents</text>
+  </g>
+
+  <g transform="translate(90 530)">
+    <rect width="252" height="116" rx="18" fill="#101720" stroke="#5FD2E8" stroke-opacity="0.35"/>
+    <text x="24" y="36" fill="#9CE6F0" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="850">LOCAL CONTEXT</text>
+    <text x="24" y="70" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="25" font-weight="850">Project folders</text>
+    <text x="24" y="96" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">Read minimal metadata</text>
+  </g>
+
+  <g transform="translate(488 520)">
+    <rect width="198" height="140" rx="18" fill="#101720" stroke="#FF7F7D" stroke-opacity="0.38"/>
+    <text x="24" y="38" fill="#FF7F7D" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="850">GUARDRAILS</text>
+    <text x="24" y="72" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="25" font-weight="850">Policy layer</text>
+    <text x="24" y="100" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">Secret checks</text>
+    <text x="24" y="122" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">Confirmation gates</text>
+  </g>
+
+  <g transform="translate(830 520)">
+    <rect width="198" height="140" rx="18" fill="#101720" stroke="#91A7FF" stroke-opacity="0.38"/>
+    <text x="24" y="38" fill="#91A7FF" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="850">MODELS</text>
+    <text x="24" y="72" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="25" font-weight="850">Providers</text>
+    <text x="24" y="100" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">Codex, Claude, Ollama</text>
+    <text x="24" y="122" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">Apple Foundation Models</text>
+  </g>
+
+  <g transform="translate(1170 520)">
+    <rect width="150" height="140" rx="18" fill="#101720" stroke="#72D39B" stroke-opacity="0.38"/>
+    <text x="22" y="38" fill="#72D39B" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="850">OUTPUT</text>
+    <text x="22" y="72" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="25" font-weight="850">Reports</text>
+    <text x="22" y="100" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">Markdown</text>
+    <text x="22" y="122" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="14">HTML, JSON</text>
+  </g>
+</svg>

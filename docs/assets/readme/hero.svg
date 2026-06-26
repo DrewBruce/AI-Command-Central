@@ -1,0 +1,110 @@
+<svg width="1600" height="720" viewBox="0 0 1600 720" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">AI Command Central product overview</title>
+  <desc id="desc">A polished dashboard illustration showing project intelligence, workflow orchestration, local model providers, and report output.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#070A0E"/>
+      <stop offset="0.52" stop-color="#071018"/>
+      <stop offset="1" stop-color="#101720"/>
+    </linearGradient>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#9CE6F0"/>
+      <stop offset="1" stop-color="#3EB9D4"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#121D28"/>
+      <stop offset="1" stop-color="#0A0F16"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="170%">
+      <feDropShadow dx="0" dy="24" stdDeviation="32" flood-color="#000000" flood-opacity="0.42"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="720" rx="0" fill="url(#bg)"/>
+  <circle cx="364" cy="-80" r="420" fill="#5FD2E8" opacity="0.13"/>
+  <circle cx="1392" cy="680" r="360" fill="#72D39B" opacity="0.08"/>
+  <path d="M0 650C176 590 304 644 493 604C736 552 827 431 1072 468C1256 496 1350 594 1600 528V720H0V650Z" fill="#5FD2E8" opacity="0.035"/>
+
+  <g transform="translate(86 72)">
+    <rect x="0" y="0" width="1428" height="574" rx="28" fill="#0B1016" stroke="#243241" filter="url(#shadow)"/>
+    <rect x="1" y="1" width="1426" height="572" rx="27" fill="url(#panel)" opacity="0.86"/>
+
+    <g transform="translate(36 34)">
+      <rect x="0" y="0" width="72" height="72" rx="18" fill="#5FD2E8" opacity="0.14" stroke="#5FD2E8" stroke-opacity="0.42"/>
+      <path d="M24 36h24M36 24v24M27 27l18 18M45 27 27 45" stroke="#9CE6F0" stroke-width="4" stroke-linecap="round"/>
+      <text x="96" y="30" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="30" font-weight="800">AI Command Central</text>
+      <text x="96" y="58" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="16">Local-first command surface for AI-assisted project work</text>
+    </g>
+
+    <g transform="translate(40 140)">
+      <text x="0" y="0" fill="#9CE6F0" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="800">COMMAND SURFACE</text>
+      <text x="0" y="56" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="54" font-weight="850">Run multi-agent work</text>
+      <text x="0" y="112" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="54" font-weight="850">without losing local control.</text>
+      <text x="0" y="160" fill="#C6D1DC" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="21">Index projects, assign specialist seats, route work to Codex, Claude,</text>
+      <text x="0" y="190" fill="#C6D1DC" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="21">Ollama, Apple Foundation Models, or deterministic local report tools.</text>
+
+      <g transform="translate(0 236)">
+        <rect x="0" y="0" width="170" height="42" rx="8" fill="#5FD2E8" opacity="0.13" stroke="#5FD2E8" stroke-opacity="0.32"/>
+        <circle cx="22" cy="21" r="6" fill="#72D39B"/>
+        <text x="40" y="27" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="700">Local-first</text>
+        <rect x="186" y="0" width="185" height="42" rx="8" fill="#91A7FF" opacity="0.12" stroke="#91A7FF" stroke-opacity="0.28"/>
+        <circle cx="208" cy="21" r="6" fill="#91A7FF"/>
+        <text x="226" y="27" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="700">Workflow seats</text>
+        <rect x="388" y="0" width="210" height="42" rx="8" fill="#F3C55C" opacity="0.12" stroke="#F3C55C" stroke-opacity="0.26"/>
+        <circle cx="410" cy="21" r="6" fill="#F3C55C"/>
+        <text x="428" y="27" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="700">Report artifacts</text>
+      </g>
+    </g>
+
+    <g transform="translate(730 72)">
+      <rect x="0" y="0" width="640" height="430" rx="20" fill="#070A0E" stroke="#243241"/>
+      <rect x="22" y="22" width="142" height="386" rx="14" fill="#0B1016" stroke="#243241"/>
+      <rect x="184" y="22" width="434" height="78" rx="14" fill="#101720" stroke="#243241"/>
+      <rect x="184" y="120" width="434" height="166" rx="14" fill="#101720" stroke="#243241"/>
+      <rect x="184" y="306" width="434" height="102" rx="14" fill="#101720" stroke="#243241"/>
+
+      <g transform="translate(42 48)">
+        <rect x="0" y="0" width="102" height="30" rx="7" fill="#5FD2E8" opacity="0.13"/>
+        <text x="16" y="20" fill="#C6D1DC" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="700">Projects</text>
+        <rect x="0" y="50" width="102" height="30" rx="7" fill="#101720"/>
+        <text x="16" y="70" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="700">Workflows</text>
+        <rect x="0" y="100" width="102" height="30" rx="7" fill="#101720"/>
+        <text x="16" y="120" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="700">Runs</text>
+      </g>
+
+      <g transform="translate(210 46)">
+        <text x="0" y="18" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="19" font-weight="800">Project Review Council</text>
+        <text x="0" y="44" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13">Live local execution available</text>
+        <rect x="310" y="8" width="84" height="28" rx="14" fill="#72D39B" opacity="0.13" stroke="#72D39B" stroke-opacity="0.3"/>
+        <text x="330" y="27" fill="#72D39B" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="800">READY</text>
+      </g>
+
+      <g transform="translate(220 155)" stroke-linecap="round">
+        <path d="M60 52H158M238 52H336" stroke="#5FD2E8" stroke-width="4" opacity="0.58"/>
+        <path d="M158 52C178 20 218 20 238 52" stroke="#91A7FF" stroke-width="4" opacity="0.68"/>
+        <g>
+          <rect x="0" y="18" width="116" height="68" rx="12" fill="#131D28" stroke="#5FD2E8" stroke-opacity="0.45"/>
+          <text x="22" y="46" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="800">Brief</text>
+          <text x="22" y="66" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="11">Context</text>
+        </g>
+        <g transform="translate(150 0)">
+          <rect x="0" y="18" width="116" height="68" rx="12" fill="#131D28" stroke="#91A7FF" stroke-opacity="0.45"/>
+          <text x="22" y="46" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="800">Risk</text>
+          <text x="22" y="66" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="11">Critic</text>
+        </g>
+        <g transform="translate(300 0)">
+          <rect x="0" y="18" width="116" height="68" rx="12" fill="#131D28" stroke="#72D39B" stroke-opacity="0.45"/>
+          <text x="22" y="46" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="800">Judge</text>
+          <text x="22" y="66" fill="#8293A3" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="11">Decision</text>
+        </g>
+      </g>
+
+      <g transform="translate(210 326)">
+        <text x="0" y="0" fill="#9CE6F0" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="800">LOCAL REPORT WRITER</text>
+        <text x="0" y="28" fill="#EEF4F8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="19" font-weight="800">report_manifest.json + report.md + report.html</text>
+        <rect x="0" y="48" width="390" height="10" rx="5" fill="#243241"/>
+        <rect x="0" y="48" width="286" height="10" rx="5" fill="url(#cyan)"/>
+      </g>
+    </g>
+  </g>
+</svg>
