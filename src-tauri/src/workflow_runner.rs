@@ -1257,6 +1257,20 @@ mod tests {
             last_modified_ms: None,
         };
 
+        let cancel_token = Arc::new(AtomicBool::new(false));
+        let completed = Arc::new(AtomicBool::new(false));
+        let cancel_for_timeout = cancel_token.clone();
+        let completed_for_timeout = completed.clone();
+        let timeout = std::thread::spawn(move || {
+            for _ in 0..90 {
+                if completed_for_timeout.load(Ordering::SeqCst) {
+                    return;
+                }
+                std::thread::sleep(std::time::Duration::from_secs(1));
+            }
+            cancel_for_timeout.store(true, Ordering::SeqCst);
+        });
+
         let run = tauri::async_runtime::block_on(run_custom_workflow(
             app.handle(),
             &workflow,
@@ -1266,9 +1280,11 @@ mod tests {
             true,
             "Is AGI possible within the next 5 years?",
             crate::scan::now_ms(),
-            Arc::new(AtomicBool::new(false)),
-        ))
-        .expect("Forecast Dashboard Codex runner should produce a run");
+            cancel_token,
+        ));
+        completed.store(true, Ordering::SeqCst);
+        let _ = timeout.join();
+        let run = run.expect("Forecast Dashboard Codex runner should produce a run within 90 seconds");
 
         assert_eq!(run.workflow_name, "Forecast Dashboard");
         assert_eq!(run.mode, "Live");

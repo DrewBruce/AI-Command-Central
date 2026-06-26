@@ -775,4 +775,35 @@ mod tests {
 
         assert_eq!(value.get("stream"), Some(&serde_json::Value::Bool(false)));
     }
+
+    #[test]
+    #[ignore = "requires `fm serve --host 127.0.0.1 --port 1976`"]
+    fn apple_foundation_models_live_smoke_returns_answer() {
+        let config = ProviderConfig {
+            mode: "local".to_string(),
+            local_base_url: "http://127.0.0.1:1976/v1".to_string(),
+            local_model: "system".to_string(),
+            external_provider: "OpenAI".to_string(),
+            external_model: "gpt-4.1-mini".to_string(),
+            api_key_stored: false,
+        };
+
+        tauri::async_runtime::block_on(async {
+            let status = check_local_provider_status(&config).await;
+            assert!(status.available, "{}", status.detail);
+            assert!(status.model_installed, "{}", status.detail);
+
+            let answer = ask_provider_with_prompt(
+                &config,
+                "You are a short native QA smoke test.",
+                "Reply with one short sentence confirming the local provider answered.",
+            )
+            .await
+            .expect("Apple Foundation Models should answer through fm serve");
+
+            assert_eq!(answer.provider_label, "Apple Foundation Models endpoint");
+            assert_eq!(answer.model, "system");
+            assert!(!answer.content.trim().is_empty());
+        });
+    }
 }

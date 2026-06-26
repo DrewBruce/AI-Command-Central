@@ -18,11 +18,11 @@ Browser mode should remain useful for inspection and demo. Native Tauri mode is 
 | --- | --- | --- |
 | GitHub repository and README | Shipped | Repository is backed up and the GitHub page has visual README assets in `docs/assets/readme/`. |
 | Browser command surface | Shipped | React/Vite app builds and browser demo mode remains available. |
-| Native local backend | Built, needs native QA | Tauri/Rust backend, SQLite, scanner, provider config, runner, and artifact commands exist and pass tests. |
-| Project scanning | Built, needs native QA | Scanner persists projects to SQLite and detects agent markers, git state, and secret-shaped env risk signals. |
+| Native local backend | Built, partial native QA | Tauri/Rust backend, SQLite, scanner, provider config, runner, and artifact commands exist and pass tests. Native launch/restart and persistence evidence is recorded in `docs/NATIVE_QA_2026-06-27.md`. |
+| Project scanning | Built, partial native QA | Scanner persists projects to SQLite and detects agent markers, git state, and secret-shaped env risk signals. Existing scan persistence is verified; new UI-triggered scan automation remains blocked. |
 | Workflow and agent library | Shipped | Imported templates and agents are merged into the app; verifier checks report workflow wiring and agent defaults. |
 | Agent default model policy | Shipped | Apple Foundation Models defaults are used for lightweight local seats; Claude Sonnet is default for heavier reasoning/report roles. |
-| Apple Foundation Models support | Built, needs native QA | `fm serve` preset, provider checks, model routing, and local runner tests exist. Needs a live macOS endpoint pass. |
+| Apple Foundation Models support | Shipped | `fm serve` preset, provider checks, model routing, and local runner tests exist. Live `fm serve` smoke passed on 2026-06-27. |
 | Local report writer | Shipped | `scripts/report-writer.mjs` creates `run.json`, `report_manifest.json`, `report.md`, and `report.html`; report workflows visibly end with Local Report Writer. |
 | External provider support | Planned | External mode is represented in config but API key storage and external calls are intentionally not wired yet. |
 | Release packaging | Planned | Tauri build script exists; signing, notarization, versioning, installer checks, and release docs remain. |
