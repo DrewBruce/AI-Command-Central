@@ -120,13 +120,58 @@ export function getProviderReadiness(
   }
 
   if (normalized.mode === "external") {
+    const issues = [];
+    const provider = normalized.externalProvider.trim();
+    const model = normalized.externalModel.trim();
+    const supportedProvider = isSupportedExternalProvider(provider);
+    if (!provider) issues.push("External provider is missing.");
+    if (!supportedProvider) issues.push("Only OpenAI is wired as an external API provider in this build.");
+    if (!model) issues.push("External model name is missing.");
+    if (!normalized.apiKeyStored) issues.push("External API key is not stored in macOS Keychain.");
+
+    if (issues.length === 0 && endpointStatus) {
+      if (!endpointStatus.available) {
+        return {
+          tone: "warn",
+          label: endpointStatus.label,
+          detail: endpointStatus.detail,
+          runModeLabel: "Demo until external provider is ready",
+          canRunLive: false,
+          issues: [endpointStatus.detail]
+        };
+      }
+
+      if (!endpointStatus.modelInstalled) {
+        return {
+          tone: "warn",
+          label: endpointStatus.label,
+          detail: endpointStatus.detail,
+          runModeLabel: "Demo until external model is available",
+          canRunLive: false,
+          issues: [`Check that ${model} is available for the stored ${provider} API key.`]
+        };
+      }
+
+      return {
+        tone: "ok",
+        label: endpointStatus.label,
+        detail: `${endpointStatus.detail} External calls send the Council prompt and local context packet to ${provider}.`,
+        runModeLabel: "Live external model available",
+        canRunLive: true,
+        issues: []
+      };
+    }
+
     return {
-      tone: "warn",
-      label: "External provider planned",
-      detail: "External API key storage is not wired in this build yet. Use local provider mode for live runs.",
-      runModeLabel: "Demo until key setup",
-      canRunLive: false,
-      issues: ["External provider calls need a secure key setup flow."]
+      tone: issues.length > 0 ? "warn" : "review",
+      label: issues.length > 0 ? "External provider needs setup" : "External provider configured",
+      detail:
+        issues.length > 0
+          ? "OpenAI external mode needs a supported provider, model, and Keychain-stored API key."
+          : `${provider} ${model}; key stored in macOS Keychain. External calls send prompts and selected local context to ${provider}. Use Check provider to verify model access.`,
+      runModeLabel: issues.length > 0 ? "Demo until external setup is complete" : "Live external can be tried",
+      canRunLive: issues.length === 0,
+      issues
     };
   }
 
@@ -166,4 +211,8 @@ export function isAppleFoundationModelsConfig(config: ProviderConfig) {
     baseUrl.includes("foundation") ||
     ((model === "system" || model === "pcc") && !baseUrl.includes("11434") && !baseUrl.includes("ollama"))
   );
+}
+
+export function isSupportedExternalProvider(provider: string) {
+  return provider.trim().toLowerCase() === "openai";
 }

@@ -1284,7 +1284,8 @@ mod tests {
         ));
         completed.store(true, Ordering::SeqCst);
         let _ = timeout.join();
-        let run = run.expect("Forecast Dashboard Codex runner should produce a run within 90 seconds");
+        let run =
+            run.expect("Forecast Dashboard Codex runner should produce a run within 90 seconds");
 
         assert_eq!(run.workflow_name, "Forecast Dashboard");
         assert_eq!(run.mode, "Live");

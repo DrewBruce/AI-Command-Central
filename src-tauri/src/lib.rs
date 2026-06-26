@@ -46,6 +46,8 @@ pub fn run() {
             commands::claude_bridge_status,
             commands::provider_config,
             commands::save_provider_config,
+            commands::save_provider_api_key,
+            commands::clear_provider_api_key,
             commands::provider_endpoint_status,
             commands::list_ollama_models,
             commands::preview_agent_file,

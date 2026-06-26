@@ -19,6 +19,7 @@ import {
   GitBranch,
   HardDrive,
   History,
+  KeyRound,
   LayoutDashboard,
   Library,
   MonitorPlay,
@@ -39,6 +40,7 @@ import { agents, projects as seedProjects, runs, workflows } from "./data";
 import {
   cancelBackendFlow,
   checkBackendProviderEndpoint,
+  clearBackendProviderApiKey,
   getBackendClaudeBridgeStatus,
   getBackendCodexBridgeStatus,
   getBackendProviderConfig,
@@ -59,6 +61,7 @@ import {
   runBackendExampleFlow,
   saveBackendCustomAgent,
   saveBackendCustomWorkflow,
+  saveBackendProviderApiKey,
   saveBackendProviderConfig,
   scanBackendProjects,
   writeBackendAgentFile
@@ -72,6 +75,7 @@ import {
   defaultProviderConfig,
   getProviderReadiness,
   isAppleFoundationModelsConfig,
+  isSupportedExternalProvider,
   loadStoredProviderConfig,
   normalizeProviderConfig,
   ollamaGemmaProviderPreset,
@@ -3721,11 +3725,14 @@ function SettingsPage({
   appStatus,
   backendMode,
   providerConfig,
+  externalApiKeyInput,
   providerEndpointStatus,
   providerReadiness,
   ollamaModels,
   onProviderConfigChange,
+  onExternalApiKeyInputChange,
   onSaveProviderConfig,
+  onClearProviderApiKey,
   onUseOllamaPreset,
   onUseApplePreset,
   onCheckProviderEndpoint,
@@ -3735,11 +3742,14 @@ function SettingsPage({
   appStatus: AppStatus | null;
   backendMode: BackendMode;
   providerConfig: ProviderConfig;
+  externalApiKeyInput: string;
   providerEndpointStatus: ProviderEndpointStatus | null;
   providerReadiness: ProviderReadiness;
   ollamaModels: string[];
   onProviderConfigChange: (config: ProviderConfig) => void;
+  onExternalApiKeyInputChange: (value: string) => void;
   onSaveProviderConfig: () => void | Promise<void>;
+  onClearProviderApiKey: () => void | Promise<void>;
   onUseOllamaPreset: () => void;
   onUseApplePreset: () => void;
   onCheckProviderEndpoint: () => void | Promise<void>;
@@ -3753,6 +3763,7 @@ function SettingsPage({
         ? `${appStatus.backend} · ${appStatus.projectCount} projects · ${appStatus.dbPath}`
         : "SQLite backend is available, but status has not loaded yet.";
   const isAppleFoundationModels = isAppleFoundationModelsConfig(providerConfig);
+  const externalProviderSupported = isSupportedExternalProvider(providerConfig.externalProvider);
   const localModelOptions = uniqueValues([appleFoundationModelsModel, ...ollamaModels]);
   const updateProvider = (patch: Partial<ProviderConfig>) => {
     onProviderConfigChange(normalizeProviderConfig({ ...providerConfig, ...patch }));
@@ -3774,7 +3785,7 @@ function SettingsPage({
           {[
             { mode: "demo" as const, icon: Sparkles, title: "Demo", detail: "Fast local simulation" },
             { mode: "local" as const, icon: Terminal, title: "Local endpoint", detail: "Ollama, LM Studio, Apple FM" },
-            { mode: "external" as const, icon: Bot, title: "External API", detail: "Secure key setup next" }
+            { mode: "external" as const, icon: Bot, title: "External API", detail: "OpenAI via Keychain" }
           ].map((option) => {
             const Icon = option.icon;
             return (
@@ -3842,28 +3853,67 @@ function SettingsPage({
         )}
 
         {providerConfig.mode === "external" && (
-          <div className="settings-fields">
-            <label className="setting-field">
-              <span>Provider</span>
-              <select
-                value={providerConfig.externalProvider}
-                onChange={(event) => updateProvider({ externalProvider: event.currentTarget.value })}
-              >
-                <option>OpenAI</option>
-                <option>Anthropic</option>
-                <option>OpenAI-compatible</option>
-              </select>
-            </label>
-            <label className="setting-field">
-              <span>Model</span>
-              <input
-                value={providerConfig.externalModel}
-                onChange={(event) => updateProvider({ externalModel: event.currentTarget.value })}
-                placeholder="gpt-4.1-mini"
+          <>
+            <div className="settings-fields">
+              <label className="setting-field">
+                <span>Provider</span>
+                <select
+                  value={providerConfig.externalProvider}
+                  onChange={(event) => updateProvider({ externalProvider: event.currentTarget.value })}
+                >
+                  <option>OpenAI</option>
+                  <option disabled>Anthropic</option>
+                  <option disabled>OpenAI-compatible</option>
+                </select>
+              </label>
+              <label className="setting-field">
+                <span>Model</span>
+                <input
+                  value={providerConfig.externalModel}
+                  onChange={(event) => updateProvider({ externalModel: event.currentTarget.value })}
+                  placeholder="gpt-4.1-mini"
+                />
+              </label>
+              <label className="setting-field external-key-field">
+                <span>API key</span>
+                <input
+                  type="password"
+                  autoComplete="off"
+                  value={externalApiKeyInput}
+                  onChange={(event) => onExternalApiKeyInputChange(event.currentTarget.value)}
+                  placeholder={providerConfig.apiKeyStored ? "Stored in macOS Keychain" : "Enter key, then save provider"}
+                />
+              </label>
+              <p className="settings-note">
+                Keys are stored in macOS Keychain and never written to SQLite. External runs send the prompt and selected local context to the provider.
+              </p>
+            </div>
+            <div
+              className={cx(
+                "provider-endpoint-card",
+                providerEndpointStatus?.available && "is-available",
+                providerEndpointStatus?.modelInstalled && "is-ready",
+                !externalProviderSupported && "is-blocked"
+              )}
+            >
+              <span
+                className={cx(
+                  "status-dot",
+                  providerEndpointStatus?.modelInstalled ? "ok" : externalProviderSupported ? "review" : "warn"
+                )}
               />
-            </label>
-            <p className="settings-note">External API keys are deliberately not collected in this screen yet.</p>
-          </div>
+              <div>
+                <strong>{providerEndpointStatus?.label ?? "External provider not checked"}</strong>
+                <small>
+                  {providerEndpointStatus?.detail ??
+                    (externalProviderSupported
+                      ? `Ready to check ${providerConfig.externalModel || "the selected model"} with ${providerConfig.externalProvider}.`
+                      : `${providerConfig.externalProvider} is not wired yet. OpenAI is supported in this build.`)}
+                </small>
+                {providerConfig.apiKeyStored ? <span>API key: stored in macOS Keychain</span> : <span>API key: not stored</span>}
+              </div>
+            </div>
+          </>
         )}
 
         {providerReadiness.issues.length > 0 && (
@@ -3875,16 +3925,26 @@ function SettingsPage({
         )}
 
         <div className="settings-actions">
-          {providerConfig.mode === "local" && (
+          {(providerConfig.mode === "local" || providerConfig.mode === "external") && (
             <div className="settings-action-group">
-              <button type="button" onClick={onUseApplePreset}>
-                <Sparkles size={16} />
-                Use Apple Foundation Models
-              </button>
-              <button type="button" onClick={onUseOllamaPreset}>
-                <Terminal size={16} />
-                Use Ollama Gemma 4 26B
-              </button>
+              {providerConfig.mode === "local" && (
+                <>
+                  <button type="button" onClick={onUseApplePreset}>
+                    <Sparkles size={16} />
+                    Use Apple Foundation Models
+                  </button>
+                  <button type="button" onClick={onUseOllamaPreset}>
+                    <Terminal size={16} />
+                    Use Ollama Gemma 4 26B
+                  </button>
+                </>
+              )}
+              {providerConfig.mode === "external" && providerConfig.apiKeyStored && (
+                <button type="button" onClick={onClearProviderApiKey} disabled={isSavingProvider}>
+                  <KeyRound size={16} />
+                  Clear stored key
+                </button>
+              )}
               <button type="button" onClick={onCheckProviderEndpoint} disabled={isCheckingProvider}>
                 <CircleDot size={16} />
                 {isCheckingProvider ? "Checking..." : "Check provider"}
@@ -3972,6 +4032,7 @@ export function App() {
   const [backendMode, setBackendMode] = useState<BackendMode>("demo");
   const [appStatus, setAppStatus] = useState<AppStatus | null>(null);
   const [providerConfig, setProviderConfig] = useState<ProviderConfig>(defaultProviderConfig);
+  const [externalApiKeyInput, setExternalApiKeyInput] = useState("");
   const [providerEndpointStatus, setProviderEndpointStatus] = useState<ProviderEndpointStatus | null>(null);
   const [ollamaModels, setOllamaModels] = useState<string[]>([]);
   const [seatAssignments, setSeatAssignments] = useState<SeatAssignmentMap>(defaultSeatAssignments);
@@ -4029,6 +4090,11 @@ export function App() {
           if (!cancelled && endpointStatus) {
             setProviderEndpointStatus(endpointStatus);
             setOllamaModels(endpointStatus.models);
+          }
+        } else if (nextProviderConfig.mode === "external" && nextProviderConfig.apiKeyStored) {
+          const endpointStatus = await checkBackendProviderEndpoint(nextProviderConfig);
+          if (!cancelled && endpointStatus) {
+            setProviderEndpointStatus(endpointStatus);
           }
         } else if (nextProviderConfig.mode === "demo") {
           const ollamaStatus = await checkBackendProviderEndpoint(ollamaGemmaProviderPreset);
@@ -4165,7 +4231,7 @@ export function App() {
   const handleCheckProviderEndpoint = async () => {
     if (isCheckingProvider) return;
     if (backendMode !== "local") {
-      showToast("Launch the native app to check the local provider from Settings.");
+      showToast("Launch the native app to check provider status from Settings.");
       return;
     }
 
@@ -4174,15 +4240,17 @@ export function App() {
     try {
       const status = await checkBackendProviderEndpoint(nextConfig);
       if (!status) {
-        showToast("Native app is required to check the local provider.");
+        showToast("Native app is required to check provider status.");
         return;
       }
-      const models = await listBackendOllamaModels(nextConfig);
       setProviderEndpointStatus(status);
-      setOllamaModels(models ?? status.models);
+      if (nextConfig.mode === "local") {
+        const models = await listBackendOllamaModels(nextConfig);
+        setOllamaModels(models ?? status.models);
+      }
       showToast(status.detail);
     } catch (error) {
-      showToast(errorMessage(error, "Local provider status check failed"));
+      showToast(errorMessage(error, "Provider status check failed"));
     } finally {
       setIsCheckingProvider(false);
     }
@@ -4339,9 +4407,25 @@ export function App() {
   const handleSaveProviderConfig = async () => {
     if (isSavingProvider) return;
     setIsSavingProvider(true);
-    const nextConfig = normalizeProviderConfig(providerConfig);
+    let nextConfig = normalizeProviderConfig(providerConfig);
     try {
       if (backendMode === "local") {
+        const key = externalApiKeyInput.trim();
+        if (nextConfig.mode === "external" && key) {
+          const keyConfig = await saveBackendProviderApiKey(nextConfig.externalProvider, key);
+          if (!keyConfig) {
+            showToast("Native app is required to store provider API keys.");
+            return;
+          }
+          nextConfig = normalizeProviderConfig({
+            ...keyConfig,
+            ...nextConfig,
+            mode: "external",
+            externalProvider: keyConfig.externalProvider,
+            apiKeyStored: true
+          });
+          setExternalApiKeyInput("");
+        }
         const saved = await saveBackendProviderConfig(nextConfig);
         if (!saved) {
           showToast("Native app is required to save provider settings.");
@@ -4350,12 +4434,41 @@ export function App() {
         setProviderConfig(normalizeProviderConfig(saved));
         showToast("Provider settings saved for native runs.");
       } else {
+        if (nextConfig.mode === "external" && externalApiKeyInput.trim()) {
+          showToast("API keys can only be stored from the native app.");
+        }
         storeProviderConfig(nextConfig);
         setProviderConfig(nextConfig);
         showToast("Provider settings saved for this browser preview.");
       }
     } catch (error) {
       showToast(errorMessage(error, "Provider settings could not be saved"));
+    } finally {
+      setIsSavingProvider(false);
+    }
+  };
+
+  const handleClearProviderApiKey = async () => {
+    if (isSavingProvider) return;
+    if (backendMode !== "local") {
+      showToast("Launch the native app to clear provider API keys.");
+      return;
+    }
+
+    setIsSavingProvider(true);
+    try {
+      const saved = await clearBackendProviderApiKey(providerConfig.externalProvider);
+      if (!saved) {
+        showToast("Native app is required to clear provider API keys.");
+        return;
+      }
+      const nextConfig = normalizeProviderConfig({ ...providerConfig, ...saved, apiKeyStored: false });
+      setExternalApiKeyInput("");
+      setProviderEndpointStatus(null);
+      setProviderConfig(nextConfig);
+      showToast("Stored provider API key cleared from macOS Keychain.");
+    } catch (error) {
+      showToast(errorMessage(error, "Provider API key could not be cleared"));
     } finally {
       setIsSavingProvider(false);
     }
@@ -4725,11 +4838,14 @@ export function App() {
             appStatus={appStatus}
             backendMode={backendMode}
             providerConfig={providerConfig}
+            externalApiKeyInput={externalApiKeyInput}
             providerEndpointStatus={providerEndpointStatus}
             providerReadiness={providerReadiness}
             ollamaModels={ollamaModels}
             onProviderConfigChange={handleProviderConfigChange}
+            onExternalApiKeyInputChange={setExternalApiKeyInput}
             onSaveProviderConfig={handleSaveProviderConfig}
+            onClearProviderApiKey={handleClearProviderApiKey}
             onUseOllamaPreset={handleUseOllamaPreset}
             onUseApplePreset={handleUseApplePreset}
             onCheckProviderEndpoint={handleCheckProviderEndpoint}

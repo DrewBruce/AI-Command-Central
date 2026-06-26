@@ -409,10 +409,42 @@ pub fn save_provider_config(
 }
 
 #[tauri::command]
+pub fn save_provider_api_key(
+    db: State<'_, Db>,
+    provider: String,
+    api_key: String,
+) -> Result<ProviderConfig, String> {
+    provider::store_external_api_key(&provider, &api_key)?;
+
+    let conn = db.0.lock().map_err(|error| error.to_string())?;
+    let mut config = db::provider_config(&conn).map_err(|error| error.to_string())?;
+    config.mode = "external".to_string();
+    config.external_provider = provider::normalized_external_provider(&provider);
+    config.api_key_stored = true;
+    db::save_provider_config(&conn, config, scan::now_ms()).map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn clear_provider_api_key(
+    db: State<'_, Db>,
+    provider: String,
+) -> Result<ProviderConfig, String> {
+    provider::clear_external_api_key(&provider)?;
+
+    let conn = db.0.lock().map_err(|error| error.to_string())?;
+    let mut config = db::provider_config(&conn).map_err(|error| error.to_string())?;
+    let normalized = provider::normalized_external_provider(&provider);
+    if provider::normalized_external_provider(&config.external_provider) == normalized {
+        config.api_key_stored = false;
+    }
+    db::save_provider_config(&conn, config, scan::now_ms()).map_err(|error| error.to_string())
+}
+
+#[tauri::command]
 pub async fn provider_endpoint_status(
     config: ProviderConfig,
 ) -> Result<provider::ProviderEndpointStatus, String> {
-    Ok(provider::check_local_provider_status(&config).await)
+    Ok(provider::check_provider_status(&config).await)
 }
 
 #[tauri::command]
@@ -491,6 +523,7 @@ fn scan_projects_inner(db: &State<'_, Db>) -> Result<ScanResult, String> {
 }
 
 fn apply_provider_answer(run: &mut FlowRun, answer: ProviderAnswer, elapsed_ms: Option<i64>) {
+    let external_provider = answer.provider_label.contains(" API");
     run.mode = "Live".to_string();
     run.answer = answer.content.clone();
     run.finished_ms = scan::now_ms();
@@ -500,13 +533,24 @@ fn apply_provider_answer(run: &mut FlowRun, answer: ProviderAnswer, elapsed_ms: 
     );
     run.sources
         .insert(0, format!("{} · {}", answer.provider_label, answer.model));
-    run.caveats.insert(
+    if external_provider {
+        run.caveats.insert(
+            0,
+            "External provider runs send the Council question and local context packet to the configured API provider; verify important claims."
+                .to_string(),
+        );
+    } else {
+        run.caveats.insert(
+            0,
+            "Live local model output is generated from the configured endpoint; verify important claims."
+                .to_string(),
+        );
+    }
+    run.assumptions.insert(
         0,
-        "Live local model output is generated from the configured endpoint; verify important claims."
+        "The configured model can answer from the supplied Council question and context packet."
             .to_string(),
     );
-    run.assumptions
-        .insert(0, "The configured local model can answer from the supplied Council question and context packet.".to_string());
 
     for seat in &mut run.seats {
         match seat.seat_id.as_str() {
@@ -518,6 +562,11 @@ fn apply_provider_answer(run: &mut FlowRun, answer: ProviderAnswer, elapsed_ms: 
                 seat.evidence = vec![
                     "Endpoint: OpenAI-compatible chat completions".to_string(),
                     format!("Model: {}", answer.model),
+                    if external_provider {
+                        "Data movement: sent Council question and local context packet to external provider".to_string()
+                    } else {
+                        "Data movement: local endpoint only".to_string()
+                    },
                     "Context: question, project path, git state, risk, next task, recent files"
                         .to_string(),
                 ];

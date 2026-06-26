@@ -142,6 +142,14 @@ export async function saveBackendProviderConfig(config: ProviderConfig): Promise
   return invokeCommand<ProviderConfig>("save_provider_config", { config });
 }
 
+export async function saveBackendProviderApiKey(provider: string, apiKey: string): Promise<ProviderConfig | null> {
+  return invokeCommand<ProviderConfig>("save_provider_api_key", { provider, apiKey });
+}
+
+export async function clearBackendProviderApiKey(provider: string): Promise<ProviderConfig | null> {
+  return invokeCommand<ProviderConfig>("clear_provider_api_key", { provider });
+}
+
 export async function checkBackendProviderEndpoint(config: ProviderConfig): Promise<ProviderEndpointStatus | null> {
   return invokeCommand<ProviderEndpointStatus>("provider_endpoint_status", { config });
 }

@@ -2958,6 +2958,11 @@ button.run-row:hover,
   background: rgba(114, 211, 155, 0.06);
 }
 
+.provider-endpoint-card.is-blocked {
+  border-color: rgba(243, 197, 92, 0.22);
+  background: rgba(243, 197, 92, 0.05);
+}
+
 .provider-endpoint-card strong,
 .provider-endpoint-card small,
 .provider-endpoint-card span:not(.status-dot) {
@@ -3070,6 +3075,10 @@ button.run-row:hover,
 .setting-field {
   display: grid;
   gap: 7px;
+}
+
+.external-key-field {
+  grid-column: 1 / -1;
 }
 
 .setting-field span {

@@ -24,11 +24,11 @@ Browser mode should remain useful for inspection and demo. Native Tauri mode is 
 | Agent default model policy | Shipped | Apple Foundation Models defaults are used for lightweight local seats; Claude Sonnet is default for heavier reasoning/report roles. |
 | Apple Foundation Models support | Shipped | `fm serve` preset, provider checks, model routing, and local runner tests exist. Live `fm serve` smoke passed on 2026-06-27. |
 | Local report writer | Shipped | `scripts/report-writer.mjs` creates `run.json`, `report_manifest.json`, `report.md`, and `report.html`; report workflows visibly end with Local Report Writer. |
-| External provider support | Planned | External mode is represented in config but API key storage and external calls are intentionally not wired yet. |
+| External provider support | Built, needs keyed native QA | OpenAI external mode has Keychain-backed API key storage, status checks, guarded missing-key errors, and OpenAI-compatible chat execution. It still needs a live keyed native run before calling it shipped. |
 | Release packaging | Planned | Tauri build script exists; signing, notarization, versioning, installer checks, and release docs remain. |
 | GitHub issue backlog | Planned | No open issues currently track this roadmap. |
 
-## Now: Native End-to-End QA
+## Done: Native End-to-End QA
 
 Goal: prove the existing native Tauri path works on a real local run, and record any gaps as issues or follow-up tasks.
 
@@ -43,18 +43,18 @@ Acceptance checks:
 - Run a report workflow and confirm the terminal Local Report Writer seat creates `run.json`, `report_manifest.json`, `report.md`, and `report.html`.
 - Capture the QA result in a committed note or GitHub issue if any acceptance check is blocked.
 
-## Next: External Provider Support
+## Now: External Provider Support
 
 Goal: make external provider mode real without compromising local-first safety.
 
 Acceptance checks:
 
-- Add a secure API key storage flow for external providers.
-- Implement an external OpenAI-compatible chat adapter behind the existing provider interface.
-- Keep local mode as the default path and clearly label external data movement before live runs.
-- Show provider state before execution, including missing key, invalid key, model unavailable, and request failure states.
+- Add a secure API key storage flow for external providers. **Built for OpenAI via macOS Keychain.**
+- Implement an external OpenAI-compatible chat adapter behind the existing provider interface. **Built for OpenAI.**
+- Keep local mode as the default path and clearly label external data movement before live runs. **Built in Settings readiness and run caveats.**
+- Show provider state before execution, including missing key, invalid key, model unavailable, and request failure states. **Built for missing key, unsupported provider, model-list checks, and request failures; needs live keyed validation.**
 - Record model/tool scope and estimated cost or usage metadata in live run receipts.
-- Add Rust tests for external config normalization, missing key errors, successful response parsing, and diagnostic failure messages.
+- Add Rust tests for external config normalization, missing key errors, successful response parsing, and diagnostic failure messages. **Built for URL normalization, missing key, unsupported provider, and response parsing.**
 - Add frontend checks for external provider readiness states.
 
 ## Next: Agent Default Policy UI
