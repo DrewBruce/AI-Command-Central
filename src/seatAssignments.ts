@@ -1,6 +1,6 @@
 import type { BackendMode, ClaudeBridgeStatus, CodexBridgeStatus, CouncilSeatId, ProviderReadiness, SeatAssignmentMap, SeatRunner } from "./types";
 
-export const seatAssignmentStorageKey = "ai-command-central.seat-assignments.v2";
+export const seatAssignmentStorageKey = "ai-command-central.seat-assignments.v3";
 
 export const councilSeatLabels: Record<CouncilSeatId, { label: string; role: string }> = {
   brief: { label: "Context packet", role: "Question + project context" },
@@ -15,15 +15,15 @@ export const seatRunnerOptions: Array<{ id: SeatRunner; label: string; detail: s
   { id: "demo", label: "Demo model", detail: "Fast local simulation" },
   { id: "codex", label: "Codex agent", detail: "Codex CLI bridge" },
   { id: "claude", label: "Claude agent", detail: "Claude CLI bridge" },
-  { id: "local", label: "Local model", detail: "Ollama or LM Studio" }
+  { id: "local", label: "Local model", detail: "Apple FM, Ollama, or LM Studio" }
 ];
 
 export const defaultSeatAssignments: SeatAssignmentMap = {
   brief: "system",
-  scan: "codex",
-  risk: "codex",
+  scan: "local",
+  risk: "claude",
   chair: "claude",
-  judge: "codex"
+  judge: "claude"
 };
 
 const seatIds: CouncilSeatId[] = ["brief", "scan", "risk", "chair", "judge"];

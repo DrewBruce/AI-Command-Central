@@ -97,12 +97,34 @@ export const importedAgents: AgentProfile[] = [
     id: "drift-auditor",
     name: "Drift Auditor",
     role: "Checks whether a seat output stayed aligned to the original intent",
-    model: "Claude Haiku",
+    model: "Apple Foundation Models: system",
     authority: "Recommend",
     defaultTools: ["Brief", "Transcript"],
     instructions: "Judge whether the output answers the original intent. Flag off-topic work, ignored constraints, or invented goals.",
     outputFormat: "summary",
-    localFit: "low"
+    localFit: "high"
+  },
+  {
+    id: "local-researcher",
+    name: "Researcher (no web)",
+    role: "Gathers, structures, and classifies supplied context without web access",
+    model: "Apple Foundation Models: system",
+    authority: "Recommend",
+    defaultTools: ["Brief", "Transcript"],
+    instructions: "Use only the supplied context. Extract relevant facts, classify the request, structure short findings, and mark unknowns without inventing evidence.",
+    outputFormat: "summary",
+    localFit: "high"
+  },
+  {
+    id: "router-dispatcher",
+    name: "Router/Dispatcher",
+    role: "Classifies a request and routes it to the best-fit specialist or workflow",
+    model: "Apple Foundation Models: system",
+    authority: "Decide",
+    defaultTools: ["Brief", "Transcript"],
+    instructions: "Classify the request, pick the best next specialist or workflow lane, and give a short reason for the route. Do not answer the underlying task.",
+    outputFormat: "summary",
+    localFit: "high"
   },
   {
     id: "html-report-producer",
@@ -289,7 +311,7 @@ export const importedAgents: AgentProfile[] = [
     id: "editor",
     name: "Editor",
     role: "Improves clarity, concision, structure, and correctness without changing meaning",
-    model: "Claude Haiku",
+    model: "Apple Foundation Models: system",
     authority: "Recommend",
     defaultTools: ["Transcript"],
     instructions: "Edit for clarity, concision, structure, grammar, and tone. Preserve meaning. Return the improved text.",
@@ -300,7 +322,7 @@ export const importedAgents: AgentProfile[] = [
     id: "summariser",
     name: "Summariser",
     role: "Condenses material into essential points, decisions, and open questions",
-    model: "Ollama: gemma4:26b",
+    model: "Apple Foundation Models: system",
     authority: "Recommend",
     defaultTools: ["Brief", "Transcript"],
     instructions: "Lead with the bottom line. Preserve essential points, decisions, figures, and unresolved questions.",
@@ -412,7 +434,7 @@ const importedTemplateData: ImportedWorkflow[] = [
   {
     id: "local-private-brief",
     name: "Private Brief - local",
-    description: "Fully on-device Gemma brief: extract facts, find gaps, and synthesize a one-page private brief.",
+    description: "Fully on-device Apple FM or local-model brief: extract facts, find gaps, and synthesize a one-page private brief.",
     runTime: "2-5 min",
     recommendedFor: "Private material",
     lanes: ["Intake", "Read", "Synthesis"],
@@ -426,7 +448,7 @@ const importedTemplateData: ImportedWorkflow[] = [
   {
     id: "local-draft-refine",
     name: "Draft and Refine - local",
-    description: "A local Gemma writing pipeline: draft, critique, then polished final.",
+    description: "A local Apple FM or local-model writing pipeline: draft, critique, then polished final.",
     runTime: "3-6 min",
     recommendedFor: "Private first drafts",
     lanes: ["Intake", "Draft", "Critique", "Final"],
@@ -440,7 +462,7 @@ const importedTemplateData: ImportedWorkflow[] = [
   {
     id: "local-first-council",
     name: "Local-first Council - hybrid",
-    description: "Run bulk analysis on local Gemma, then use a cloud Chair for the final call.",
+    description: "Run bulk analysis on Apple FM or a local model, then use a cloud Chair for the final call.",
     runTime: "4-8 min",
     recommendedFor: "Private but decisive",
     lanes: ["Intake", "Analysis", "Critique", "Decision"],
@@ -790,7 +812,8 @@ function agentIdForSeat(seat: ImportedSeat) {
   if (seat.model === "none" || /^entry/i.test(seat.role)) return undefined;
   if (seat.role.toLowerCase().includes("local report")) return "local-report-writer";
   if (seat.model === "local") return "local-analyst";
-  const role = seat.role.toLowerCase();
+  const role = `${seat.role} ${seat.label} ${seat.function}`.toLowerCase();
+  if (role.includes("router") || role.includes("dispatcher")) return "router-dispatcher";
   if (role.includes("forecast")) return "forecast-analyst";
   if (role.includes("research writer")) return "research-writer";
   if (role.includes("html report")) return "html-report-producer";
@@ -807,7 +830,7 @@ function agentIdForSeat(seat: ImportedSeat) {
   if (role.includes("chair")) return "chair";
   if (role.includes("judge")) return "judge";
   if (role.includes("critic")) return "critic";
-  if (role.includes("research")) return "researcher";
-  if (role.includes("analyst") || role.includes("specialist") || role.includes("router")) return "analyst";
+  if (role.includes("research")) return seat.webSearch ? "researcher" : "local-researcher";
+  if (role.includes("analyst") || role.includes("specialist")) return "analyst";
   return undefined;
 }
