@@ -3187,6 +3187,100 @@ button.run-row:hover,
   opacity: 0.62;
 }
 
+.agent-default-policy {
+  margin-top: 14px;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  padding: 14px 0;
+}
+
+.agent-default-policy-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.agent-default-policy-title strong,
+.agent-default-policy-title small {
+  display: block;
+}
+
+.agent-default-policy-title strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.agent-default-policy-title small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.agent-default-table {
+  overflow-x: auto;
+  border: 1px solid rgba(145, 170, 198, 0.12);
+  border-radius: var(--radius);
+}
+
+.agent-default-row {
+  display: grid;
+  grid-template-columns: minmax(250px, 1.8fr) minmax(130px, 0.65fr) minmax(280px, 1.5fr);
+  min-width: 760px;
+  border-top: 1px solid rgba(145, 170, 198, 0.1);
+}
+
+.agent-default-row:first-child {
+  border-top: 0;
+}
+
+.agent-default-row > span {
+  min-width: 0;
+  padding: 10px 12px;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.agent-default-header {
+  background: rgba(145, 170, 198, 0.07);
+}
+
+.agent-default-header > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 780;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.agent-default-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  border: 1px solid rgba(145, 170, 198, 0.15);
+  border-radius: 999px;
+  padding: 0 9px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.agent-default-badge.local {
+  border-color: rgba(114, 211, 155, 0.24);
+  background: rgba(114, 211, 155, 0.08);
+  color: var(--ok);
+}
+
+.agent-default-badge.cloud {
+  border-color: rgba(95, 210, 232, 0.22);
+  background: rgba(95, 210, 232, 0.08);
+  color: var(--accent);
+}
+
 .agent-card {
   min-height: 188px;
   border: 1px solid var(--line-soft);

@@ -3380,6 +3380,72 @@ function RunHistorySummary({
   );
 }
 
+const agentDefaultPolicyRows = [
+  {
+    agent: "Summariser, Editor",
+    defaultModel: "Apple FM",
+    modelTone: "local",
+    why: "Light rewrite, condensation, cleanup"
+  },
+  {
+    agent: "Researcher (no web), Drift Auditor, Router/Dispatcher",
+    defaultModel: "Apple FM",
+    modelTone: "local",
+    why: "Gather, structure, classify, short judgement"
+  },
+  {
+    agent: "Critic, Devil's Advocate, Risk Assessor",
+    defaultModel: "Claude Sonnet",
+    modelTone: "cloud",
+    why: "Deeper reasoning, adversarial review, risk tradeoffs"
+  },
+  {
+    agent: "Fact-Checker, web-search Researchers",
+    defaultModel: "Cloud",
+    modelTone: "cloud",
+    why: "Needs current facts, source checking, web context"
+  },
+  {
+    agent: "Chair, Judge",
+    defaultModel: "Claude Sonnet",
+    modelTone: "cloud",
+    why: "Synthesis, adjudication, final recommendation"
+  },
+  {
+    agent: "Forecast Analyst, Research Writer, Problem Solver, HTML Report Producer",
+    defaultModel: "Claude Sonnet",
+    modelTone: "cloud",
+    why: "Heavy deliverables, long-form reasoning, report production"
+  }
+] as const;
+
+function AgentDefaultPolicyPanel() {
+  return (
+    <section className="agent-default-policy" aria-label="Agent default model policy">
+      <div className="agent-default-policy-title">
+        <strong>Default model policy</strong>
+        <small>Apple FM handles private lightweight local seats; Claude Sonnet handles deeper cloud reasoning.</small>
+      </div>
+      <div className="agent-default-table" role="table" aria-label="Agent model defaults">
+        <div className="agent-default-row agent-default-header" role="row">
+          <span role="columnheader">Agent</span>
+          <span role="columnheader">Default</span>
+          <span role="columnheader">Why</span>
+        </div>
+        {agentDefaultPolicyRows.map((row) => (
+          <div className="agent-default-row" role="row" key={row.agent}>
+            <span role="cell">{row.agent}</span>
+            <span role="cell">
+              <span className={cx("agent-default-badge", row.modelTone)}>{row.defaultModel}</span>
+            </span>
+            <span role="cell">{row.why}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function AgentLibrary({
   agents,
   customAgentIds,
@@ -3414,6 +3480,7 @@ function AgentLibrary({
           }
         }}
       />
+      <AgentDefaultPolicyPanel />
       {isFormOpen && (
         <AgentComposer
           key={editingAgent?.id ?? "new-agent"}

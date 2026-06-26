@@ -21,7 +21,7 @@ Browser mode should remain useful for inspection and demo. Native Tauri mode is 
 | Native local backend | Built, partial native QA | Tauri/Rust backend, SQLite, scanner, provider config, runner, and artifact commands exist and pass tests. Native launch/restart and persistence evidence is recorded in `docs/NATIVE_QA_2026-06-27.md`. |
 | Project scanning | Built, partial native QA | Scanner persists projects to SQLite and detects agent markers, git state, and secret-shaped env risk signals. Existing scan persistence is verified; new UI-triggered scan automation remains blocked. |
 | Workflow and agent library | Shipped | Imported templates and agents are merged into the app; verifier checks report workflow wiring and agent defaults. |
-| Agent default model policy | Shipped | Apple Foundation Models defaults are used for lightweight local seats; Claude Sonnet is default for heavier reasoning/report roles. |
+| Agent default model policy | Shipped | Apple Foundation Models defaults are used for lightweight local seats; Claude Sonnet is default for heavier reasoning/report roles. The Agents view now shows the default policy table. |
 | Apple Foundation Models support | Shipped | `fm serve` preset, provider checks, model routing, and local runner tests exist. Live `fm serve` smoke passed on 2026-06-27. |
 | Local report writer | Shipped | `scripts/report-writer.mjs` creates `run.json`, `report_manifest.json`, `report.md`, and `report.html`; report workflows visibly end with Local Report Writer. |
 | External provider support | Built, needs keyed native QA | OpenAI external mode has Keychain-backed API key storage, status checks, guarded missing-key errors, and OpenAI-compatible chat execution. It still needs a live keyed native run before calling it shipped. |
@@ -57,18 +57,18 @@ Acceptance checks:
 - Add Rust tests for external config normalization, missing key errors, successful response parsing, and diagnostic failure messages. **Built for URL normalization, missing key, unsupported provider, and response parsing.**
 - Add frontend checks for external provider readiness states.
 
-## Next: Agent Default Policy UI
+## Done: Agent Default Policy UI
 
 Goal: expose the default model policy so users understand why a seat resolves to Apple FM, Claude, local, Codex, or system tooling.
 
 Acceptance checks:
 
-- Add a visible defaults panel in Agents or Settings with columns for Agent, Default, and Why.
-- Show Apple FM guidance for lightweight local tasks: summarise, edit, classify, route, extract, condense, and no-web structure.
-- Show Claude Sonnet guidance for critic, risk, chair, judge, fact-checking, web research, forecast, problem solving, and report production.
-- Make web vs no-web research defaults explicit.
-- Keep the current verifier coverage for default drift.
-- Add a small UI-level check or screenshot QA pass for the defaults panel.
+- Add a visible defaults panel in Agents or Settings with columns for Agent, Default, and Why. **Built in the Agents view.**
+- Show Apple FM guidance for lightweight local tasks: summarise, edit, classify, route, extract, condense, and no-web structure. **Built.**
+- Show Claude Sonnet guidance for critic, risk, chair, judge, fact-checking, web research, forecast, problem solving, and report production. **Built.**
+- Make web vs no-web research defaults explicit. **Built.**
+- Keep the current verifier coverage for default drift. **Built; `npm run test:reports` checks the panel anchors and agent defaults.**
+- Add a small UI-level check or screenshot QA pass for the defaults panel. **Done in local Playwright QA.**
 
 ## Next: Safe Project Readiness Actions
 

@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 const source = await readFile(new URL("../src/importedLibrary.ts", import.meta.url), "utf8");
 const coreSource = await readFile(new URL("../src/data.ts", import.meta.url), "utf8");
 const seatAssignmentsSource = await readFile(new URL("../src/seatAssignments.ts", import.meta.url), "utf8");
+const appSource = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
 
 const expectedReportWorkflows = [
   "architecture-decision-report",
@@ -65,6 +66,9 @@ assert.match(defaultAssignments, /judge: "claude"/, "Council Judge should defaul
 
 assert.match(source, /seat\.webSearch \? "researcher" : "local-researcher"/, "Research seats should distinguish web and no-web defaults");
 assert.match(source, /router-dispatcher/, "Router or dispatcher seats should have an Apple FM default agent");
+assert.match(appSource, /Default model policy/, "Agent defaults should be visible in the Agents UI");
+assert.match(appSource, /Summariser, Editor/, "Agent defaults UI should include lightweight Apple FM seats");
+assert.match(appSource, /Forecast Analyst, Research Writer, Problem Solver, HTML Report Producer/, "Agent defaults UI should include heavy Claude Sonnet seats");
 
 console.log(
   `Verified ${expectedReportWorkflows.length} report workflows, local report wiring, and ${agentModelExpectations.length} agent defaults.`
