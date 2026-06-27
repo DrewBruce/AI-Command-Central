@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use serde::Serialize;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Manager, Runtime, State};
 
 use crate::codex_bridge::{self, ClaudeBridgeStatus, CodexBridgeStatus, SeatAssignments};
 use crate::db::{self, CustomAgentRecord, CustomWorkflowRecord, Db, ProjectRecord, ScanPath};
@@ -115,7 +115,7 @@ pub fn scan_projects(
         return Err("scan already running".to_string());
     }
 
-    let result = scan_projects_inner(&db);
+    let result = scan_projects_inner(db.inner());
     scan_state.0.store(false, Ordering::SeqCst);
     result
 }
@@ -233,6 +233,29 @@ pub async fn run_custom_workflow(
     app: AppHandle,
     db: State<'_, Db>,
     flow_state: State<'_, FlowRunState>,
+    project_id: String,
+    workflow: CustomWorkflowRecord,
+    live: bool,
+    prompt: String,
+    agents: Vec<CustomAgentRecord>,
+) -> Result<FlowRun, String> {
+    run_custom_workflow_inner(
+        &app,
+        db.inner(),
+        flow_state.inner(),
+        project_id,
+        workflow,
+        live,
+        prompt,
+        agents,
+    )
+    .await
+}
+
+async fn run_custom_workflow_inner<R: Runtime>(
+    app: &AppHandle<R>,
+    db: &Db,
+    flow_state: &FlowRunState,
     project_id: String,
     workflow: CustomWorkflowRecord,
     live: bool,
@@ -499,7 +522,7 @@ pub fn write_agent_file(
     })
 }
 
-fn scan_projects_inner(db: &State<'_, Db>) -> Result<ScanResult, String> {
+fn scan_projects_inner(db: &Db) -> Result<ScanResult, String> {
     let started = scan::now_ms();
     let roots: Vec<PathBuf> = {
         let conn = db.0.lock().map_err(|error| error.to_string())?;
@@ -593,7 +616,7 @@ fn apply_provider_answer(run: &mut FlowRun, answer: ProviderAnswer, elapsed_ms: 
     }
 }
 
-fn run_artifact_dir(app: &AppHandle, run_id: &str) -> Result<PathBuf, String> {
+fn run_artifact_dir<R: Runtime>(app: &AppHandle<R>, run_id: &str) -> Result<PathBuf, String> {
     let safe_id = safe_artifact_segment(run_id);
     Ok(app
         .path()
@@ -603,7 +626,7 @@ fn run_artifact_dir(app: &AppHandle, run_id: &str) -> Result<PathBuf, String> {
         .join(safe_id))
 }
 
-fn save_run_artifacts(app: &AppHandle, run: &FlowRun) -> Result<PathBuf, String> {
+fn save_run_artifacts<R: Runtime>(app: &AppHandle<R>, run: &FlowRun) -> Result<PathBuf, String> {
     let root = app
         .path()
         .app_data_dir()
@@ -970,6 +993,9 @@ fn project_path(db: &State<'_, Db>, id: &str) -> Result<PathBuf, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::db::WorkflowNodeRecord;
+    use std::fs;
+    use std::sync::Mutex;
 
     fn project() -> ProjectRecord {
         ProjectRecord {
@@ -1000,6 +1026,94 @@ mod tests {
             last_scanned_ms: 100,
             last_modified_ms: Some(90),
         }
+    }
+
+    fn native_smoke_workflow() -> CustomWorkflowRecord {
+        CustomWorkflowRecord {
+            id: "native-smoke-report".to_string(),
+            name: "Native Smoke Report".to_string(),
+            description:
+                "Bounded native smoke that verifies scan, persistence, and report artifact output."
+                    .to_string(),
+            seats: 3,
+            run_time: "Under 1 min".to_string(),
+            recommended_for: "Native QA".to_string(),
+            nodes: vec![
+                WorkflowNodeRecord {
+                    id: "request".to_string(),
+                    label: "Request".to_string(),
+                    x: 0.0,
+                    y: 0.0,
+                    kind: "input".to_string(),
+                    agent_id: None,
+                    role: Some("Entry".to_string()),
+                    function_text: Some("Capture the QA question.".to_string()),
+                },
+                WorkflowNodeRecord {
+                    id: "review".to_string(),
+                    label: "System Review".to_string(),
+                    x: 160.0,
+                    y: 0.0,
+                    kind: "decision".to_string(),
+                    agent_id: Some("system-reviewer".to_string()),
+                    role: Some("Decision".to_string()),
+                    function_text: Some(
+                        "Confirm that the native command path can produce a report-ready answer."
+                            .to_string(),
+                    ),
+                },
+                WorkflowNodeRecord {
+                    id: "local-report".to_string(),
+                    label: "Local Report Writer".to_string(),
+                    x: 320.0,
+                    y: 0.0,
+                    kind: "decision".to_string(),
+                    agent_id: Some("local-report-writer".to_string()),
+                    role: Some("Local Report Writer".to_string()),
+                    function_text: Some("Assemble the final report artifacts locally.".to_string()),
+                },
+            ],
+            edges: vec![
+                ["request".to_string(), "review".to_string()],
+                ["review".to_string(), "local-report".to_string()],
+            ],
+        }
+    }
+
+    fn native_smoke_agents() -> Vec<CustomAgentRecord> {
+        vec![
+            CustomAgentRecord {
+                id: "system-reviewer".to_string(),
+                name: "System Reviewer".to_string(),
+                role: "Confirms native smoke state without a model bridge".to_string(),
+                model: "System".to_string(),
+                authority: "Recommend".to_string(),
+                default_tools: vec!["SQLite".to_string(), "Report artifacts".to_string()],
+                instructions: None,
+                skill_ref: None,
+                prompt_ref: None,
+                web_search: Some(false),
+                output_format: Some("markdown".to_string()),
+                local_fit: None,
+            },
+            CustomAgentRecord {
+                id: "local-report-writer".to_string(),
+                name: "Local Report Writer".to_string(),
+                role: "Assembles report artifacts locally".to_string(),
+                model: "System".to_string(),
+                authority: "Act".to_string(),
+                default_tools: vec![
+                    "Local filesystem".to_string(),
+                    "Report manifest".to_string(),
+                ],
+                instructions: None,
+                skill_ref: None,
+                prompt_ref: None,
+                web_search: Some(false),
+                output_format: Some("json".to_string()),
+                local_fit: Some("high".to_string()),
+            },
+        ]
     }
 
     #[test]
@@ -1064,5 +1178,80 @@ mod tests {
         assert!(markdown.contains("## Council Answer"));
         assert!(html.contains("Artifact Test"));
         assert!(html.contains("Proceed with a narrow test."));
+    }
+
+    #[test]
+    fn native_smoke_scans_persists_run_reloads_and_writes_report_artifacts() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let scan_root = temp_dir.path().join("scan-root");
+        let project_dir = scan_root.join("native-smoke");
+        fs::create_dir_all(&project_dir).unwrap();
+        fs::write(project_dir.join("package.json"), "{}").unwrap();
+        fs::write(project_dir.join("AGENTS.md"), "Local smoke rules").unwrap();
+
+        let db_path = temp_dir.path().join("native-smoke.sqlite");
+        let conn = db::open(&db_path).unwrap();
+        conn.execute("DELETE FROM scan_paths", []).unwrap();
+        conn.execute(
+            "INSERT INTO scan_paths (path, enabled) VALUES (?1, 1)",
+            [scan_root.to_string_lossy().to_string()],
+        )
+        .unwrap();
+        let db = Db(Mutex::new(conn));
+
+        let scan = scan_projects_inner(&db).unwrap();
+        assert_eq!(scan.roots_scanned, 1);
+        assert_eq!(scan.projects_found, 1);
+
+        let project_id = {
+            let conn = db.0.lock().unwrap();
+            let scan_runs: i64 = conn
+                .query_row("SELECT count(*) FROM scan_runs", [], |row| row.get(0))
+                .unwrap();
+            let projects = db::list_projects(&conn).unwrap();
+            assert_eq!(scan_runs, 1);
+            assert_eq!(projects.len(), 1);
+            assert_eq!(projects[0].name, "native-smoke");
+            assert_eq!(projects[0].agents, vec!["Codex"]);
+            projects[0].id.clone()
+        };
+
+        let app = tauri::test::mock_app();
+        let flow_state = FlowRunState::default();
+        let run = tauri::async_runtime::block_on(run_custom_workflow_inner(
+            app.handle(),
+            &db,
+            &flow_state,
+            project_id,
+            native_smoke_workflow(),
+            true,
+            "Verify native scan, persistence, reload, and report artifacts.".to_string(),
+            native_smoke_agents(),
+        ))
+        .unwrap();
+
+        assert_eq!(run.workflow_id, "native-smoke-report");
+        assert_eq!(run.mode, "Live");
+        assert!(run
+            .seats
+            .iter()
+            .any(|seat| seat.agent == "Local report writer"));
+
+        let reopened = db::open(&db_path).unwrap();
+        let runs = db::list_flow_runs(&reopened, 5).unwrap();
+        assert_eq!(runs.len(), 1);
+        assert_eq!(runs[0].id, run.id);
+        assert_eq!(runs[0].workflow_name, "Native Smoke Report");
+
+        let folder = run_artifact_dir(app.handle(), &run.id).unwrap();
+        assert!(folder.join("run.json").is_file());
+        assert!(folder.join("report_manifest.json").is_file());
+        assert!(folder.join("report.md").is_file());
+        assert!(folder.join("report.html").is_file());
+        let manifest = fs::read_to_string(folder.join("report_manifest.json")).unwrap();
+        assert!(manifest.contains("\"localReportWriter\": true"));
+        assert!(manifest.contains("\"run.json\""));
+        assert!(manifest.contains("\"report.html\""));
+        let _ = fs::remove_dir_all(folder);
     }
 }

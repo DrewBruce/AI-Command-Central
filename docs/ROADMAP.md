@@ -18,8 +18,8 @@ Browser mode should remain useful for inspection and demo. Native Tauri mode is 
 | --- | --- | --- |
 | GitHub repository and README | Shipped | Repository is backed up and the GitHub page has visual README assets in `docs/assets/readme/`. |
 | Browser command surface | Shipped | React/Vite app builds and browser demo mode remains available. |
-| Native local backend | Built, partial native QA | Tauri/Rust backend, SQLite, scanner, provider config, runner, and artifact commands exist and pass tests. Native launch/restart and persistence evidence is recorded in `docs/NATIVE_QA_2026-06-27.md`. |
-| Project scanning | Built, partial native QA | Scanner persists projects to SQLite and detects agent markers, git state, and secret-shaped env risk signals. Existing scan persistence is verified; new UI-triggered scan automation remains blocked. |
+| Native local backend | Built, partial native QA | Tauri/Rust backend, SQLite, scanner, provider config, runner, and artifact commands pass tests, including bounded native smoke coverage for scan/run persistence and report artifacts. Native launch/restart evidence is recorded in `docs/NATIVE_QA_2026-06-27.md`. |
+| Project scanning | Built, partial native QA | Scanner persists projects to SQLite and detects agent markers, git state, and secret-shaped env risk signals. Existing app data and bounded smoke verify scan persistence; new UI-triggered scan automation remains blocked. |
 | Workflow and agent library | Shipped | Imported templates and agents are merged into the app; verifier checks report workflow wiring and agent defaults. |
 | Agent default model policy | Shipped | Apple Foundation Models defaults are used for lightweight local seats; Claude Sonnet is default for heavier reasoning/report roles. The Agents view now shows the default policy table. |
 | Apple Foundation Models support | Shipped | `fm serve` preset, provider checks, model routing, and local runner tests exist. Live `fm serve` smoke passed on 2026-06-27. |
@@ -35,12 +35,12 @@ Goal: prove the existing native Tauri path works on a real local run, and record
 Acceptance checks:
 
 - Launch the native app with `npm run tauri:dev`.
-- Run a real project scan and confirm project count, scan timestamp, and selected project details persist in SQLite.
+- Run a real project scan and confirm project count, scan timestamp, and selected project details persist in SQLite. **Partially covered by existing app data plus bounded native smoke; UI-triggered automation remains blocked.**
 - Restart the app and confirm project/run history reloads.
 - Check local provider readiness for Apple Foundation Models with `fm serve --host 127.0.0.1 --port 1976`.
 - Run at least one Apple FM local-model seat if the endpoint is available; otherwise record the exact blocked state.
-- Check Codex and Claude bridge detection and run at least one bridge-backed workflow seat when available.
-- Run a report workflow and confirm the terminal Local Report Writer seat creates `run.json`, `report_manifest.json`, `report.md`, and `report.html`.
+- Check Codex and Claude bridge detection and run at least one bridge-backed workflow seat when available. **Detection works; live bridge run remains blocked by Claude login and Codex runtime stall.**
+- Run a report workflow and confirm the terminal Local Report Writer seat creates `run.json`, `report_manifest.json`, `report.md`, and `report.html`. **Covered by bounded native smoke; still needs a real UI-triggered app data run.**
 - Capture the QA result in a committed note or GitHub issue if any acceptance check is blocked.
 
 ## Now: External Provider Support
