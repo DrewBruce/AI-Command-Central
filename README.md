@@ -179,6 +179,14 @@ Run the native desktop app:
 npm run tauri:dev
 ```
 
+Build a packaged macOS app:
+
+```bash
+npm run tauri:build
+```
+
+Release packaging, signing, and notarization steps are tracked in [docs/RELEASE.md](docs/RELEASE.md).
+
 Generate report artifacts from a run file:
 
 ```bash

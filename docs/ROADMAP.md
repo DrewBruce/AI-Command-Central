@@ -25,7 +25,7 @@ Browser mode should remain useful for inspection and demo. Native Tauri mode is 
 | Apple Foundation Models support | Shipped | `fm serve` preset, provider checks, model routing, and local runner tests exist. Live `fm serve` smoke passed on 2026-06-27. |
 | Local report writer | Shipped | `scripts/report-writer.mjs` creates `run.json`, `report_manifest.json`, `report.md`, and `report.html`; report workflows visibly end with Local Report Writer. |
 | External provider support | Built, needs keyed native QA | OpenAI external mode has Keychain-backed API key storage, status checks, guarded missing-key errors, and OpenAI-compatible chat execution. It still needs a live keyed native run before calling it shipped. |
-| Release packaging | Planned | Tauri build script exists; signing, notarization, versioning, installer checks, and release docs remain. |
+| Release packaging | Built, needs signing setup | `npm run tauri:build` succeeds locally. CI, release docs, and version alignment are in place; signing/notarization credentials and packaged installer checks remain. |
 | GitHub issue backlog | Planned | No open issues currently track this roadmap. |
 
 ## Done: Native End-to-End QA
@@ -95,18 +95,18 @@ Acceptance checks:
 - Workflow cards make runner requirements visible before selection. **Built via runtime pills and runner health panels.**
 - Report workflows keep bounded model output and local artifact assembly. **Built with Local Report Writer endings.**
 
-## Next: Release Hardening
+## Now: Release Hardening
 
 Goal: prepare the app for reliable installation and repeatable releases.
 
 Acceptance checks:
 
-- `npm run tauri:build` succeeds on the release machine.
-- App versioning is explicit across `package.json`, Cargo metadata, and Tauri config.
-- Signing and notarization steps are documented and, where possible, scripted.
-- Generated artifacts remain ignored and the repository stays clean after build/test/release commands.
-- README includes install/run guidance for a packaged app.
-- Add a CI workflow for build, report tests, and Rust tests.
+- `npm run tauri:build` succeeds on the release machine. **Passed locally on 2026-06-27.**
+- App versioning is explicit across `package.json`, Cargo metadata, and Tauri config. **All are currently `0.1.0`.**
+- Signing and notarization steps are documented and, where possible, scripted. **Documented in `docs/RELEASE.md`; credentials/scripts remain.**
+- Generated artifacts remain ignored and the repository stays clean after build/test/release commands. **Ignored paths remain untracked; verify before release.**
+- README includes install/run guidance for a packaged app. **Built.**
+- Add a CI workflow for build, report tests, and Rust tests. **Built in `.github/workflows/ci.yml`.**
 
 ## Next: GitHub Backlog
 
