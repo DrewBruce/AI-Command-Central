@@ -6,11 +6,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::flow::FlowRun;
 use crate::provider::{self, ProviderConfig};
-use crate::scan::{DetectedProject, SessionSummary};
+use crate::scan::{DetectedProject, ProjectReadiness, SessionSummary};
 
 pub struct Db(pub Mutex<Connection>);
 
-const SCHEMA_VERSION: i64 = 7;
+const SCHEMA_VERSION: i64 = 8;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -28,6 +28,7 @@ pub struct ProjectRecord {
     pub notes: String,
     pub recent_files: Vec<String>,
     pub sessions: Vec<SessionSummary>,
+    pub readiness: ProjectReadiness,
     pub last_scanned_ms: i64,
     pub last_modified_ms: Option<i64>,
 }
@@ -136,6 +137,7 @@ fn migrate(conn: &Connection) -> rusqlite::Result<()> {
           notes TEXT NOT NULL,
           recent_files_json TEXT NOT NULL DEFAULT '[]',
           sessions_json TEXT NOT NULL DEFAULT '[]',
+          readiness_json TEXT NOT NULL DEFAULT '{}',
           last_scanned_ms INTEGER NOT NULL,
           last_modified_ms INTEGER
         );
@@ -201,10 +203,24 @@ fn migrate(conn: &Connection) -> rusqlite::Result<()> {
         );
         ",
     )?;
+    ensure_project_columns(conn)?;
     ensure_flow_run_columns(conn)?;
     ensure_provider_config(conn)?;
     ensure_custom_library_tables(conn)?;
     conn.pragma_update(None, "user_version", SCHEMA_VERSION)?;
+    Ok(())
+}
+
+fn ensure_project_columns(conn: &Connection) -> rusqlite::Result<()> {
+    let mut stmt = conn.prepare("PRAGMA table_info(projects)")?;
+    let columns = stmt.query_map([], |row| row.get::<_, String>(1))?;
+    let columns = columns.collect::<rusqlite::Result<Vec<_>>>()?;
+    if !columns.iter().any(|column| column == "readiness_json") {
+        conn.execute(
+            "ALTER TABLE projects ADD COLUMN readiness_json TEXT NOT NULL DEFAULT '{}'",
+            [],
+        )?;
+    }
     Ok(())
 }
 
@@ -353,8 +369,8 @@ pub fn enabled_roots(conn: &Connection) -> rusqlite::Result<Vec<PathBuf>> {
 pub fn list_projects(conn: &Connection) -> rusqlite::Result<Vec<ProjectRecord>> {
     let mut stmt = conn.prepare(
         "SELECT id, name, path, agents_json, status, git, risk, confidence, activity,
-                next_task, notes, recent_files_json, sessions_json, last_scanned_ms,
-                last_modified_ms
+                next_task, notes, recent_files_json, sessions_json, readiness_json,
+                last_scanned_ms, last_modified_ms
          FROM projects
          ORDER BY
            CASE risk
@@ -370,6 +386,7 @@ pub fn list_projects(conn: &Connection) -> rusqlite::Result<Vec<ProjectRecord>> 
         let agents_json: String = row.get(3)?;
         let recent_files_json: String = row.get(11)?;
         let sessions_json: String = row.get(12)?;
+        let readiness_json: String = row.get(13)?;
         Ok(ProjectRecord {
             id: row.get(0)?,
             name: row.get(1)?,
@@ -384,8 +401,9 @@ pub fn list_projects(conn: &Connection) -> rusqlite::Result<Vec<ProjectRecord>> 
             notes: row.get(10)?,
             recent_files: serde_json::from_str(&recent_files_json).unwrap_or_default(),
             sessions: serde_json::from_str(&sessions_json).unwrap_or_default(),
-            last_scanned_ms: row.get(13)?,
-            last_modified_ms: row.get(14)?,
+            readiness: serde_json::from_str(&readiness_json).unwrap_or_default(),
+            last_scanned_ms: row.get(14)?,
+            last_modified_ms: row.get(15)?,
         })
     })?;
     rows.collect()
@@ -401,14 +419,15 @@ pub fn project_path(conn: &Connection, id: &str) -> rusqlite::Result<Option<Stri
 pub fn project_by_id(conn: &Connection, id: &str) -> rusqlite::Result<Option<ProjectRecord>> {
     conn.query_row(
         "SELECT id, name, path, agents_json, status, git, risk, confidence, activity,
-                next_task, notes, recent_files_json, sessions_json, last_scanned_ms,
-                last_modified_ms
+                next_task, notes, recent_files_json, sessions_json, readiness_json,
+                last_scanned_ms, last_modified_ms
          FROM projects WHERE id = ?1",
         [id],
         |row| {
             let agents_json: String = row.get(3)?;
             let recent_files_json: String = row.get(11)?;
             let sessions_json: String = row.get(12)?;
+            let readiness_json: String = row.get(13)?;
             Ok(ProjectRecord {
                 id: row.get(0)?,
                 name: row.get(1)?,
@@ -423,8 +442,9 @@ pub fn project_by_id(conn: &Connection, id: &str) -> rusqlite::Result<Option<Pro
                 notes: row.get(10)?,
                 recent_files: serde_json::from_str(&recent_files_json).unwrap_or_default(),
                 sessions: serde_json::from_str(&sessions_json).unwrap_or_default(),
-                last_scanned_ms: row.get(13)?,
-                last_modified_ms: row.get(14)?,
+                readiness: serde_json::from_str(&readiness_json).unwrap_or_default(),
+                last_scanned_ms: row.get(14)?,
+                last_modified_ms: row.get(15)?,
             })
         },
     )
@@ -619,13 +639,15 @@ pub fn upsert_projects(
             serde_json::to_string(&project.recent_files).unwrap_or_else(|_| "[]".into());
         let sessions_json =
             serde_json::to_string(&project.sessions).unwrap_or_else(|_| "[]".into());
+        let readiness_json =
+            serde_json::to_string(&project.readiness).unwrap_or_else(|_| "{}".into());
 
         tx.execute(
             "INSERT INTO projects
               (id, name, path, agents_json, status, git, risk, confidence, activity,
-               next_task, notes, recent_files_json, sessions_json, last_scanned_ms,
-               last_modified_ms)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)
+               next_task, notes, recent_files_json, sessions_json, readiness_json,
+               last_scanned_ms, last_modified_ms)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)
              ON CONFLICT(id) DO UPDATE SET
                name = excluded.name,
                path = excluded.path,
@@ -639,6 +661,7 @@ pub fn upsert_projects(
                notes = excluded.notes,
                recent_files_json = excluded.recent_files_json,
                sessions_json = excluded.sessions_json,
+               readiness_json = excluded.readiness_json,
                last_scanned_ms = excluded.last_scanned_ms,
                last_modified_ms = excluded.last_modified_ms",
             rusqlite::params![
@@ -655,6 +678,7 @@ pub fn upsert_projects(
                 project.notes,
                 recent_files_json,
                 sessions_json,
+                readiness_json,
                 project.last_scanned_ms,
                 project.last_modified_ms,
             ],
@@ -778,6 +802,17 @@ mod tests {
                 label: "Local project signal".to_string(),
                 age: "just now".to_string(),
             }],
+            readiness: ProjectReadiness {
+                summary: "Working tree has uncommitted changes".to_string(),
+                suggested_action: "Review working tree and decide what should ship next"
+                    .to_string(),
+                git_branch: Some("main".to_string()),
+                git_ahead: 1,
+                git_behind: 0,
+                changed_files: vec!["src/App.tsx".to_string()],
+                secret_risk: false,
+                agent_context_missing: false,
+            },
             last_scanned_ms: 100,
             last_modified_ms: Some(90),
         }
@@ -798,6 +833,8 @@ mod tests {
         assert_eq!(rows[0].agents, vec!["Codex"]);
         assert_eq!(rows[0].recent_files, vec!["AGENTS.md", "package.json"]);
         assert_eq!(rows[0].sessions[0].label, "Local project signal");
+        assert_eq!(rows[0].readiness.git_ahead, 1);
+        assert_eq!(rows[0].readiness.changed_files, vec!["src/App.tsx"]);
         assert_eq!(
             project_path(&conn, &project.id).unwrap(),
             Some(project.path)

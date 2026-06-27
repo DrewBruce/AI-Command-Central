@@ -1072,6 +1072,7 @@ mod tests {
             notes: "Test project".to_string(),
             recent_files: Vec::new(),
             sessions: Vec::new(),
+            readiness: crate::scan::ProjectReadiness::default(),
             last_scanned_ms: 0,
             last_modified_ms: None,
         };
@@ -1253,6 +1254,7 @@ mod tests {
                 "src-tauri/src/workflow_runner.rs".to_string(),
             ],
             sessions: Vec::new(),
+            readiness: crate::scan::ProjectReadiness::default(),
             last_scanned_ms: 0,
             last_modified_ms: None,
         };

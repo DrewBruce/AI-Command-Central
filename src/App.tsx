@@ -105,6 +105,7 @@ import type {
   GitState,
   NavItem,
   Project,
+  ProjectReadiness,
   ProviderConfig,
   ProviderEndpointStatus,
   ProviderReadiness,
@@ -1627,6 +1628,8 @@ function ProjectDrawer({
         onClose={onCloseAgentFilePreview}
       />
 
+      <ProjectReadinessSignals project={project} />
+
       <div className="drawer-section">
         <h3>Next task</h3>
         <p className="task-note">{project.nextTask}</p>
@@ -1735,6 +1738,81 @@ function ProjectReadiness({
       )}
     </div>
   );
+}
+
+function ProjectReadinessSignals({ project }: { project: Project }) {
+  const readiness = project.readiness?.summary ? project.readiness : readinessFromProject(project);
+  const changedFiles = readiness.changedFiles.length
+    ? readiness.changedFiles
+    : project.git === "Dirty"
+      ? project.recentFiles.slice(0, 5)
+      : [];
+  const tone = readiness.secretRisk ? "danger" : readiness.agentContextMissing ? "warn" : project.git === "Clean" ? "ok" : "review";
+  const gitParts = [
+    readiness.gitBranch ? `Branch ${readiness.gitBranch}` : null,
+    readiness.gitAhead > 0 ? `${readiness.gitAhead} ahead` : null,
+    readiness.gitBehind > 0 ? `${readiness.gitBehind} behind` : null
+  ].filter((part): part is string => Boolean(part));
+
+  return (
+    <div className="drawer-section readiness-signals">
+      <div className="readiness-signal-head">
+        <h3>Readiness signals</h3>
+        <StatusPill tone={tone}>{readiness.secretRisk ? "Inspect only" : project.git}</StatusPill>
+      </div>
+      <p className="task-note">{readiness.summary || project.notes}</p>
+      <div className="readiness-signal-grid">
+        <span>
+          <GitBranch size={13} />
+          {gitParts.length ? gitParts.join(" · ") : project.git}
+        </span>
+        <span>
+          <ShieldCheck size={13} />
+          {readiness.suggestedAction || project.nextTask}
+        </span>
+      </div>
+      {changedFiles.length > 0 && (
+        <ul className="file-list readiness-file-list" aria-label="Affected files">
+          {changedFiles.map((file) => (
+            <li key={file}>
+              <FileText size={13} />
+              {file}
+            </li>
+          ))}
+        </ul>
+      )}
+      {readiness.secretRisk && (
+        <p className="readiness-warning">
+          Secret risk is detected by filename only. File contents and values are not read or displayed.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function readinessFromProject(project: Project): ProjectReadiness {
+  const secretRisk = project.risk === "Secret flagged";
+  const agentContextMissing = project.risk === "Needs agent file";
+  const summary = secretRisk
+    ? "Secret-shaped files detected by filename only"
+    : agentContextMissing
+      ? "Agent context is missing"
+      : project.git === "Dirty"
+        ? "Working tree has uncommitted changes"
+        : project.git === "Ahead" || project.git === "Behind"
+          ? "Branch is not aligned with upstream"
+          : "Project is ready for focused agent work";
+
+  return {
+    summary,
+    suggestedAction: project.nextTask,
+    gitBranch: null,
+    gitAhead: project.git === "Ahead" ? 1 : 0,
+    gitBehind: project.git === "Behind" ? 1 : 0,
+    changedFiles: project.git === "Dirty" ? project.recentFiles.slice(0, 5) : [],
+    secretRisk,
+    agentContextMissing
+  };
 }
 
 function ActionGroup({ title, children }: { title: string; children: React.ReactNode }) {

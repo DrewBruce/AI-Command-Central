@@ -11,6 +11,7 @@ pub struct GitStatus {
     pub is_dirty: bool,
     pub ahead: i64,
     pub behind: i64,
+    pub changed_files: Vec<String>,
     pub last_commit_ms: Option<i64>,
 }
 
@@ -22,6 +23,7 @@ impl GitStatus {
             is_dirty: false,
             ahead: 0,
             behind: 0,
+            changed_files: Vec::new(),
             last_commit_ms: None,
         }
     }
@@ -56,6 +58,22 @@ fn parse_ahead_behind(output: &str) -> (i64, i64) {
     (ahead, behind)
 }
 
+fn parse_changed_files(output: &str) -> Vec<String> {
+    output
+        .lines()
+        .filter_map(|line| {
+            let path = line.get(3..).unwrap_or(line).trim();
+            let path = path.split(" -> ").last().unwrap_or(path).trim();
+            if path.is_empty() {
+                None
+            } else {
+                Some(path.to_string())
+            }
+        })
+        .take(12)
+        .collect()
+}
+
 fn parse_last_commit_ms(output: &str) -> Option<i64> {
     let secs: i64 = output.trim().parse().ok()?;
     Some(secs * 1000)
@@ -72,9 +90,9 @@ pub fn git_status(path: &Path) -> GitStatus {
     } else {
         Some(branch_raw)
     };
-    let is_dirty = run_git(path, &["status", "--porcelain"], timeout)
-        .map(|output| !output.trim().is_empty())
-        .unwrap_or(false);
+    let status_output = run_git(path, &["status", "--porcelain"], timeout).unwrap_or_default();
+    let is_dirty = !status_output.trim().is_empty();
+    let changed_files = parse_changed_files(&status_output);
     let (ahead, behind) = run_git(
         path,
         &["rev-list", "--left-right", "--count", "@{u}...HEAD"],
@@ -91,6 +109,35 @@ pub fn git_status(path: &Path) -> GitStatus {
         is_dirty,
         ahead,
         behind,
+        changed_files,
         last_commit_ms,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_changed_files_from_porcelain_status() {
+        let files = parse_changed_files(
+            " M src/App.tsx\nA  docs/ROADMAP.md\nR  old-name.md -> new-name.md\n?? .env.local\n",
+        );
+
+        assert_eq!(
+            files,
+            vec![
+                "src/App.tsx",
+                "docs/ROADMAP.md",
+                "new-name.md",
+                ".env.local"
+            ]
+        );
+    }
+
+    #[test]
+    fn parses_ahead_behind_counts() {
+        assert_eq!(parse_ahead_behind("2 5"), (5, 2));
+        assert_eq!(parse_ahead_behind("bad data"), (0, 0));
     }
 }

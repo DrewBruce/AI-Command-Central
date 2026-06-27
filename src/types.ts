@@ -20,6 +20,18 @@ export type Project = {
   notes: string;
   recentFiles: string[];
   sessions: Array<{ agent: Agent; label: string; age: string }>;
+  readiness?: ProjectReadiness;
+};
+
+export type ProjectReadiness = {
+  summary: string;
+  suggestedAction: string;
+  gitBranch?: string | null;
+  gitAhead: number;
+  gitBehind: number;
+  changedFiles: string[];
+  secretRisk: boolean;
+  agentContextMissing: boolean;
 };
 
 export type Workflow = {

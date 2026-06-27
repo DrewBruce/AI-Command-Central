@@ -44,6 +44,19 @@ pub struct SessionSummary {
     pub age: String,
 }
 
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectReadiness {
+    pub summary: String,
+    pub suggested_action: String,
+    pub git_branch: Option<String>,
+    pub git_ahead: i64,
+    pub git_behind: i64,
+    pub changed_files: Vec<String>,
+    pub secret_risk: bool,
+    pub agent_context_missing: bool,
+}
+
 #[derive(Debug, Clone)]
 pub struct DetectedProject {
     pub id: String,
@@ -59,6 +72,7 @@ pub struct DetectedProject {
     pub notes: String,
     pub recent_files: Vec<String>,
     pub sessions: Vec<SessionSummary>,
+    pub readiness: ProjectReadiness,
     pub last_scanned_ms: i64,
     pub last_modified_ms: Option<i64>,
 }
@@ -243,6 +257,40 @@ fn next_task(risk: &str, git_label: &str, agents: &[String]) -> String {
     }
 }
 
+fn readiness_signal(
+    risk: &str,
+    git_label: &str,
+    git: &git::GitStatus,
+    agents: &[String],
+    next_task: &str,
+) -> ProjectReadiness {
+    let mut changed_files = git.changed_files.clone();
+    changed_files.truncate(8);
+
+    let summary = if risk == "Secret flagged" {
+        "Secret-shaped files detected by filename only".to_string()
+    } else if agents.is_empty() {
+        "Agent context is missing".to_string()
+    } else if git_label == "Dirty" {
+        "Working tree has uncommitted changes".to_string()
+    } else if git.ahead > 0 || git.behind > 0 {
+        "Branch is not aligned with upstream".to_string()
+    } else {
+        "Project is ready for focused agent work".to_string()
+    };
+
+    ProjectReadiness {
+        summary,
+        suggested_action: next_task.to_string(),
+        git_branch: git.branch.clone(),
+        git_ahead: git.ahead,
+        git_behind: git.behind,
+        changed_files,
+        secret_risk: risk == "Secret flagged",
+        agent_context_missing: agents.is_empty(),
+    }
+}
+
 fn detect_project(dir: &Path, now: i64) -> Option<DetectedProject> {
     if !is_project(dir) {
         return None;
@@ -275,6 +323,7 @@ fn detect_project(dir: &Path, now: i64) -> Option<DetectedProject> {
     let confidence = confidence(&path, &agents, &git_status);
     let activity = relative_age(now, last_modified.or(git_status.last_commit_ms));
     let next_task = next_task(&risk, &git, &agents);
+    let readiness = readiness_signal(&risk, &git, &git_status, &agents, &next_task);
     let notes = if agents.is_empty() {
         "Detected from repository markers. Add an agent context file for stronger automation."
             .to_string()
@@ -307,6 +356,7 @@ fn detect_project(dir: &Path, now: i64) -> Option<DetectedProject> {
         notes,
         recent_files,
         sessions,
+        readiness,
         last_scanned_ms: now,
         last_modified_ms: last_modified,
     })
@@ -388,5 +438,27 @@ mod tests {
         assert_eq!(projects[0].agents, vec!["Codex"]);
         assert_eq!(projects[0].risk, "Clear");
         assert!(projects[0].recent_files.contains(&"AGENTS.md".to_string()));
+    }
+
+    #[test]
+    fn secret_risk_is_filename_only() {
+        let temp = tempdir().unwrap();
+        let project_dir = temp.path().join("secret-test");
+        fs::create_dir(&project_dir).unwrap();
+        fs::write(project_dir.join("package.json"), "{}").unwrap();
+        fs::write(
+            project_dir.join(".env.local"),
+            "API_TOKEN=should-not-appear",
+        )
+        .unwrap();
+
+        let projects = scan_roots(&[temp.path().to_path_buf()], 4);
+
+        assert_eq!(projects.len(), 1);
+        assert_eq!(projects[0].risk, "Secret flagged");
+        assert!(projects[0].readiness.secret_risk);
+        assert!(projects[0].readiness.summary.contains("filename only"));
+        assert!(!projects[0].readiness.summary.contains("should-not-appear"));
+        assert!(!projects[0].notes.contains("should-not-appear"));
     }
 }

@@ -70,18 +70,18 @@ Acceptance checks:
 - Keep the current verifier coverage for default drift. **Built; `npm run test:reports` checks the panel anchors and agent defaults.**
 - Add a small UI-level check or screenshot QA pass for the defaults panel. **Done in local Playwright QA.**
 
-## Next: Safe Project Readiness Actions
+## Now: Safe Project Readiness Actions
 
 Goal: turn readiness signals into safe, inspectable actions.
 
 Acceptance checks:
 
-- Projects missing agent context offer an `AGENTS.md` preview before any write.
-- The user can review generated content and explicitly approve the write.
-- Secret/env risks remain inspect-only; the app flags presence without reading or printing secret values.
-- Dirty git state shows affected files, ahead/behind state, and suggested next action.
+- Projects missing agent context offer an `AGENTS.md` preview before any write. **Built.**
+- The user can review generated content and explicitly approve the write. **Built in the drawer approval flow; native writes refuse to overwrite existing files.**
+- Secret/env risks remain inspect-only; the app flags presence without reading or printing secret values. **Built and covered by scanner tests.**
+- Dirty git state shows affected files, ahead/behind state, and suggested next action. **Built via project readiness signals in the drawer.**
 - Readiness action outcomes are logged into run or project history.
-- Tests cover preview generation, write confirmation, secret-risk non-disclosure, and dirty git parsing.
+- Tests cover preview generation, write confirmation, secret-risk non-disclosure, and dirty git parsing. **Preview, secret-risk, dirty-file parsing, and DB persistence are covered; write-confirmation history remains.**
 
 ## Next: Workflow Expansion
 

@@ -986,6 +986,17 @@ mod tests {
             notes: "Detected from repository markers.".to_string(),
             recent_files: vec!["package.json".to_string()],
             sessions: Vec::new(),
+            readiness: crate::scan::ProjectReadiness {
+                summary: "Agent context is missing".to_string(),
+                suggested_action: "Create an agent context file so tools know project rules"
+                    .to_string(),
+                git_branch: Some("main".to_string()),
+                git_ahead: 0,
+                git_behind: 0,
+                changed_files: vec!["package.json".to_string()],
+                secret_risk: false,
+                agent_context_missing: true,
+            },
             last_scanned_ms: 100,
             last_modified_ms: Some(90),
         }

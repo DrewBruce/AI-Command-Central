@@ -813,6 +813,7 @@ mod tests {
             notes: "Local project.".to_string(),
             recent_files: vec!["src/App.tsx".to_string()],
             sessions: Vec::new(),
+            readiness: crate::scan::ProjectReadiness::default(),
             last_scanned_ms: 100,
             last_modified_ms: Some(90),
         }

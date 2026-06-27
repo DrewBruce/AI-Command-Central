@@ -1078,6 +1078,59 @@ button {
   padding: 14px 0 0;
 }
 
+.readiness-signals {
+  display: grid;
+  gap: 9px;
+}
+
+.readiness-signal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.readiness-signal-head h3 {
+  margin: 0;
+}
+
+.readiness-signal-grid {
+  display: grid;
+  gap: 7px;
+}
+
+.readiness-signal-grid span {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  min-width: 0;
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.readiness-signal-grid svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--accent);
+}
+
+.readiness-file-list {
+  gap: 6px;
+  max-height: 132px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.readiness-warning {
+  margin: 0;
+  border-left: 2px solid var(--danger);
+  color: var(--text-2);
+  padding-left: 9px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .task-note {
   margin: 0;
   color: var(--text-2);
