@@ -69,6 +69,10 @@ assert.match(source, /router-dispatcher/, "Router or dispatcher seats should hav
 assert.match(appSource, /Default model policy/, "Agent defaults should be visible in the Agents UI");
 assert.match(appSource, /Summariser, Editor/, "Agent defaults UI should include lightweight Apple FM seats");
 assert.match(appSource, /Forecast Analyst, Research Writer, Problem Solver, HTML Report Producer/, "Agent defaults UI should include heavy Claude Sonnet seats");
+assert.match(coreSource, /blocker taxonomy/, "Ship Readiness should include a release blocker taxonomy");
+assert.match(coreSource, /go\/no-go recommendation/, "Ship Readiness should produce a go/no-go recommendation");
+assert.match(coreSource, /source freshness notes/, "Research Sprint should include source freshness notes");
+assert.match(coreSource, /local-report-writer/, "Core report workflows should end with Local Report Writer");
 
 console.log(
   `Verified ${expectedReportWorkflows.length} report workflows, local report wiring, and ${agentModelExpectations.length} agent defaults.`

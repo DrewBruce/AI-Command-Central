@@ -3346,58 +3346,144 @@ function RunsPage({
   onSelectRun: (runId: string) => void;
   onOpenRunArtifactFolder: (run: ExampleFlowRun) => void;
 }) {
+  const [runFilters, setRunFilters] = useState({
+    workflow: "All",
+    project: "All",
+    verdict: "All",
+    mode: "All"
+  });
+  const runRows = useMemo(
+    () => [
+      ...flowRuns.map((run, index) => ({
+        id: run.id,
+        workflowName: run.workflowName,
+        projectName: run.projectName,
+        mode: run.mode,
+        verdict: run.verdict,
+        duration: `${Math.max(1, Math.round((run.finishedMs - run.startedMs) / 1000))}s`,
+        cost: "$0.00",
+        time: index === 0 ? "latest" : "saved",
+        flowRun: run
+      })),
+      ...runs.map((run) => ({
+        id: run.id,
+        workflowName: run.workflow,
+        projectName: run.project,
+        mode: run.mode,
+        verdict: run.outcome,
+        duration: run.duration,
+        cost: run.cost,
+        time: run.time,
+        flowRun: null
+      }))
+    ],
+    [flowRuns]
+  );
+  const workflowOptions = ["All", ...uniqueValues(runRows.map((run) => run.workflowName))];
+  const projectOptions = ["All", ...uniqueValues(runRows.map((run) => run.projectName))];
+  const verdictOptions = ["All", ...uniqueValues(runRows.map((run) => run.verdict))];
+  const modeOptions = ["All", ...uniqueValues(runRows.map((run) => run.mode))];
+  const filteredRows = runRows.filter(
+    (run) =>
+      (runFilters.workflow === "All" || run.workflowName === runFilters.workflow) &&
+      (runFilters.project === "All" || run.projectName === runFilters.project) &&
+      (runFilters.verdict === "All" || run.verdict === runFilters.verdict) &&
+      (runFilters.mode === "All" || run.mode === runFilters.mode)
+  );
   const selectedFlowRun = flowRuns.find((run) => run.id === selectedRunId) ?? flowRuns[0] ?? null;
-  const liveCount = flowRuns.filter((run) => run.mode === "Live").length;
-  const revisionCount = flowRuns.filter((run) => run.verdict === "REVISE").length;
+  const liveCount = filteredRows.filter((run) => run.mode === "Live").length;
+  const revisionCount = filteredRows.filter((run) => run.verdict === "REVISE" || run.verdict === "Needs revision").length;
+  const updateRunFilter = (key: keyof typeof runFilters, value: string) => {
+    setRunFilters((current) => ({ ...current, [key]: value }));
+  };
 
   return (
     <section className="content-panel">
       <PanelHeader title="Run history" action="Export" />
+      <div className="run-filter-grid" aria-label="Run filters">
+        <label>
+          <span>Workflow</span>
+          <select value={runFilters.workflow} onChange={(event) => updateRunFilter("workflow", event.currentTarget.value)}>
+            {workflowOptions.map((option) => (
+              <option key={option}>{option}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>Project</span>
+          <select value={runFilters.project} onChange={(event) => updateRunFilter("project", event.currentTarget.value)}>
+            {projectOptions.map((option) => (
+              <option key={option}>{option}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>Verdict</span>
+          <select value={runFilters.verdict} onChange={(event) => updateRunFilter("verdict", event.currentTarget.value)}>
+            {verdictOptions.map((option) => (
+              <option key={option}>{option}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>Mode</span>
+          <select value={runFilters.mode} onChange={(event) => updateRunFilter("mode", event.currentTarget.value)}>
+            {modeOptions.map((option) => (
+              <option key={option}>{option}</option>
+            ))}
+          </select>
+        </label>
+      </div>
       <RunHistorySummary
         selectedProject={selectedProject}
         selectedRun={selectedFlowRun}
-        savedCount={flowRuns.length}
+        savedCount={filteredRows.length}
         liveCount={liveCount}
         revisionCount={revisionCount}
       />
       <div className="runs-table">
-        {flowRuns.map((run, index) => (
-          <button
-            key={run.id}
-            type="button"
-            className={cx("run-row", selectedFlowRun?.id === run.id && "is-selected")}
-            onClick={() => onSelectRun(run.id)}
-          >
-            <span className="run-id">{run.id}</span>
+        {filteredRows.map((run) => {
+          const cells = (
+            <>
+              <span className="run-id">{run.id}</span>
+              <span>
+                <strong>{run.workflowName}</strong>
+                <small>{run.projectName}</small>
+              </span>
+              <StatusPill tone={run.mode === "Live" ? "review" : "idle"}>{run.mode}</StatusPill>
+              <StatusPill tone={run.verdict === "APPROVE" || run.verdict === "Approved" || run.verdict === "Saved" ? "ok" : run.verdict === "ESCALATE" || run.verdict === "Failed" ? "danger" : "warn"}>
+                {run.verdict}
+              </StatusPill>
+              <span className="muted">{run.duration}</span>
+              <span className="muted">{run.cost}</span>
+              <span className="muted">{run.time}</span>
+            </>
+          );
+
+          return run.flowRun ? (
+            <button
+              key={run.id}
+              type="button"
+              className={cx("run-row", selectedFlowRun?.id === run.id && "is-selected")}
+              onClick={() => onSelectRun(run.id)}
+            >
+              {cells}
+            </button>
+          ) : (
+            <div key={run.id} className="run-row">
+              {cells}
+            </div>
+          );
+        })}
+        {filteredRows.length === 0 && (
+          <div className="run-row empty-run-row">
+            <span className="run-id">No runs</span>
             <span>
-              <strong>{run.workflowName}</strong>
-              <small>{run.projectName}</small>
+              <strong>No run history matches these filters</strong>
+              <small>Change workflow, project, verdict, or mode to widen the list.</small>
             </span>
-            <StatusPill tone={run.mode === "Live" ? "review" : "idle"}>{run.mode}</StatusPill>
-            <StatusPill tone={run.verdict === "APPROVE" ? "ok" : run.verdict === "ESCALATE" ? "danger" : "warn"}>
-              {run.verdict}
-            </StatusPill>
-            <span className="muted">{Math.max(1, Math.round((run.finishedMs - run.startedMs) / 1000))}s</span>
-            <span className="muted">$0.00</span>
-            <span className="muted">{index === 0 ? "latest" : "saved"}</span>
-          </button>
-        ))}
-        {runs.map((run) => (
-          <div key={run.id} className="run-row">
-            <span className="run-id">{run.id}</span>
-            <span>
-              <strong>{run.workflow}</strong>
-              <small>{run.project}</small>
-            </span>
-            <StatusPill tone={run.mode === "Live" ? "review" : "idle"}>{run.mode}</StatusPill>
-            <StatusPill tone={run.outcome === "Failed" ? "danger" : run.outcome === "Needs revision" ? "warn" : "ok"}>
-              {run.outcome}
-            </StatusPill>
-            <span className="muted">{run.duration}</span>
-            <span className="muted">{run.cost}</span>
-            <span className="muted">{run.time}</span>
           </div>
-        ))}
+        )}
       </div>
       {selectedFlowRun ? (
         <section className="report-preview" aria-label="Selected run report">

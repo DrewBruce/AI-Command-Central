@@ -120,33 +120,130 @@ const coreWorkflows: Workflow[] = [
   {
     id: "ship-readiness",
     name: "Ship Readiness",
-    description: "Checks code health, UX completion, release blockers, and produces a go/no-go decision.",
-    seats: 5,
+    description: "Runs release QA, blocker taxonomy, human gate, and a go/no-go ship report.",
+    seats: 6,
     runTime: "4-8 min",
     recommendedFor: "Before packaging",
     nodes: [
-      { id: "scope", label: "Scope", x: 44, y: 96, kind: "input" },
-      { id: "qa", label: "QA", x: 212, y: 42, kind: "review" },
-      { id: "release", label: "Release", x: 212, y: 152, kind: "research" },
-      { id: "gate", label: "Human Gate", x: 404, y: 96, kind: "human" },
-      { id: "decision", label: "Decision", x: 572, y: 96, kind: "decision" }
+      {
+        id: "scope",
+        label: "Release Scope",
+        x: 44,
+        y: 96,
+        kind: "input",
+        function: "Capture target release, changed surface, acceptance criteria, known risks, and the exact ship/no-ship decision needed."
+      },
+      {
+        id: "qa",
+        label: "QA Auditor",
+        x: 212,
+        y: 42,
+        kind: "review",
+        agentId: "reviewer",
+        role: "Release QA Auditor",
+        function: "Assess build, test, UX completion, and regression risk. Classify findings as Blocker, Major, Minor, or Watch with evidence and the exact verification still needed."
+      },
+      {
+        id: "release",
+        label: "Release Risk",
+        x: 212,
+        y: 152,
+        kind: "review",
+        agentId: "risk-assessor",
+        role: "Release Risk Assessor",
+        function: "Identify operational, packaging, signing, data, privacy, and rollback risks. Return a release blocker taxonomy and mitigation for each material item."
+      },
+      {
+        id: "gate",
+        label: "Human Gate",
+        x: 404,
+        y: 96,
+        kind: "human",
+        agentId: "human-gate",
+        role: "Ship Approval Gate",
+        function: "Pause for explicit human approval before treating the release as shippable. Summarize the unresolved blocker list first."
+      },
+      {
+        id: "decision",
+        label: "Go / No-Go",
+        x: 572,
+        y: 96,
+        kind: "decision",
+        agentId: "html-report-producer",
+        role: "Ship Readiness Report Producer",
+        function: "Produce a bounded Ship Readiness report with sections: verdict, blocker taxonomy, evidence checked, unresolved risks, required fixes, and go/no-go recommendation."
+      },
+      {
+        id: "local-report",
+        label: "Local Report Writer",
+        x: 744,
+        y: 96,
+        kind: "decision",
+        agentId: "local-report-writer",
+        role: "Local Report Writer",
+        function: "Assemble the bounded Ship Readiness report into local run artifacts: report_manifest.json, report.md, and report.html."
+      }
     ],
-    edges: [["scope", "qa"], ["scope", "release"], ["qa", "gate"], ["release", "gate"], ["gate", "decision"]]
+    edges: [["scope", "qa"], ["scope", "release"], ["qa", "gate"], ["release", "gate"], ["gate", "decision"], ["decision", "local-report"]]
   },
   {
     id: "research-sprint",
     name: "Research Sprint",
-    description: "Parallel evidence gathering with web-search enabled seats and a compact synthesis report.",
-    seats: 4,
+    description: "Runs source collection, freshness review, fact checking, and a compact source-backed synthesis.",
+    seats: 5,
     runTime: "2-5 min",
     recommendedFor: "Current facts",
     nodes: [
-      { id: "question", label: "Question", x: 44, y: 98, kind: "input" },
-      { id: "source-a", label: "Source A", x: 214, y: 42, kind: "research" },
-      { id: "source-b", label: "Source B", x: 214, y: 154, kind: "research" },
-      { id: "synthesis", label: "Synthesis", x: 432, y: 98, kind: "decision" }
+      {
+        id: "question",
+        label: "Question",
+        x: 44,
+        y: 98,
+        kind: "input",
+        function: "Capture the research question, target freshness window, scope exclusions, and required decision or deliverable."
+      },
+      {
+        id: "source-a",
+        label: "Source Sweep",
+        x: 214,
+        y: 42,
+        kind: "research",
+        agentId: "researcher",
+        role: "Web Researcher",
+        function: "Gather current sources. For each source, record claim, publisher, date, freshness, evidence quality, and any conflict with other sources."
+      },
+      {
+        id: "source-b",
+        label: "Fact Check",
+        x: 214,
+        y: 154,
+        kind: "review",
+        agentId: "fact-checker",
+        role: "Fact-Checker",
+        function: "Check load-bearing claims, dates, names, figures, and source recency. Mark unsupported, stale, or disputed claims."
+      },
+      {
+        id: "synthesis",
+        label: "Synthesis",
+        x: 432,
+        y: 98,
+        kind: "decision",
+        agentId: "research-writer",
+        role: "Research Writer",
+        function: "Write a compact source-backed synthesis for current facts: bottom line, findings by question, source freshness notes, confidence, caveats, and what would change the conclusion."
+      },
+      {
+        id: "local-report",
+        label: "Local Report Writer",
+        x: 620,
+        y: 98,
+        kind: "decision",
+        agentId: "local-report-writer",
+        role: "Local Report Writer",
+        function: "Assemble the Research Sprint synthesis into local run artifacts: report_manifest.json, report.md, and report.html."
+      }
     ],
-    edges: [["question", "source-a"], ["question", "source-b"], ["source-a", "synthesis"], ["source-b", "synthesis"]]
+    edges: [["question", "source-a"], ["question", "source-b"], ["source-a", "synthesis"], ["source-b", "synthesis"], ["synthesis", "local-report"]]
   }
 ];
 

@@ -83,17 +83,17 @@ Acceptance checks:
 - Readiness action outcomes are logged into run or project history.
 - Tests cover preview generation, write confirmation, secret-risk non-disclosure, and dirty git parsing. **Preview, secret-risk, dirty-file parsing, and DB persistence are covered; write-confirmation history remains.**
 
-## Next: Workflow Expansion
+## Done: Workflow Expansion
 
 Goal: make Ship Readiness and Research Sprint distinct, useful workflows rather than generic council variants.
 
 Acceptance checks:
 
-- Ship Readiness has its own prompt shape, release blocker taxonomy, go/no-go verdict, and report template.
-- Research Sprint has source/evidence slots, source freshness notes, and synthesis output built for current facts.
-- Runs can be filtered by workflow, project, verdict, and mode.
-- Workflow cards make runner requirements visible before selection.
-- Report workflows keep bounded model output and local artifact assembly.
+- Ship Readiness has its own prompt shape, release blocker taxonomy, go/no-go verdict, and report template. **Built.**
+- Research Sprint has source/evidence slots, source freshness notes, and synthesis output built for current facts. **Built.**
+- Runs can be filtered by workflow, project, verdict, and mode. **Built.**
+- Workflow cards make runner requirements visible before selection. **Built via runtime pills and runner health panels.**
+- Report workflows keep bounded model output and local artifact assembly. **Built with Local Report Writer endings.**
 
 ## Next: Release Hardening
 

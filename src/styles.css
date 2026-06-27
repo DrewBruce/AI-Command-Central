@@ -2869,6 +2869,36 @@ button {
   border-radius: var(--radius-lg);
 }
 
+.run-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.run-filter-grid label {
+  display: grid;
+  gap: 6px;
+}
+
+.run-filter-grid span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 780;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.run-filter-grid select {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid rgba(95, 210, 232, 0.18);
+  border-radius: var(--radius);
+  background: rgba(7, 10, 14, 0.58);
+  color: var(--text);
+  padding: 0 10px;
+}
+
 .run-row {
   display: grid;
   grid-template-columns: 82px minmax(200px, 1.2fr) 76px 126px 86px 70px 88px;
@@ -2901,6 +2931,10 @@ button.run-row:hover,
 
 .run-row:last-child {
   border-bottom: 0;
+}
+
+.empty-run-row {
+  grid-template-columns: 82px minmax(0, 1fr);
 }
 
 .run-row small,
@@ -3530,6 +3564,10 @@ button.run-row:hover,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .run-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .workflow-builder {
     grid-template-columns: minmax(190px, 240px) minmax(0, 1fr);
   }
@@ -3582,6 +3620,10 @@ button.run-row:hover,
   }
 
   .studio-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .run-filter-grid {
     grid-template-columns: 1fr;
   }
 
