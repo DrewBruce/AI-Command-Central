@@ -1,1 +1,1 @@
-{}
+{"main":{"identifier":"main","description":"Allow the main window to subscribe to native workflow progress events.","local":true,"windows":["main"],"permissions":["core:event:allow-listen","core:event:allow-unlisten"]}}

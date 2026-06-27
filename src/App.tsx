@@ -320,6 +320,33 @@ function workflowWithSeatCount(workflow: WorkflowType): WorkflowType {
   };
 }
 
+function assignAgentToWorkflowNode(
+  node: WorkflowType["nodes"][number],
+  agent: AgentProfile | null
+): WorkflowType["nodes"][number] {
+  if (!agent) return { ...node, agentId: undefined };
+  return {
+    ...node,
+    agentId: agent.id,
+    kind: workflowNodeKindForAgent(agent)
+  };
+}
+
+function workflowWithSeatAgent(
+  workflow: WorkflowType,
+  nodeId: string,
+  agentId: string,
+  agents: AgentProfile[]
+): WorkflowType {
+  const agent = agentId ? agents.find((candidate) => candidate.id === agentId) ?? null : null;
+  return workflowWithSeatCount({
+    ...workflow,
+    nodes: workflow.nodes.map((node) =>
+      node.id === nodeId ? assignAgentToWorkflowNode(node, agent) : node
+    )
+  });
+}
+
 function createWorkflowFromDraft(draft: WorkflowDraft): WorkflowType {
   const name = draft.name.trim() || "Untitled Workflow";
   const purpose = draft.purpose.trim() || "Custom local workflow for the selected project.";
@@ -1973,6 +2000,7 @@ function WorkflowStudio({
   claudeBridgeStatus,
   seatAssignments,
   onSeatAssignmentChange,
+  onWorkflowSeatAgentChange,
   councilPrompt,
   setCouncilPrompt,
   latestFlowRun,
@@ -2002,6 +2030,7 @@ function WorkflowStudio({
   claudeBridgeStatus: ClaudeBridgeStatus;
   seatAssignments: SeatAssignmentMap;
   onSeatAssignmentChange: (seatId: CouncilSeatId, runner: SeatRunner) => void;
+  onWorkflowSeatAgentChange: (nodeId: string, agentId: string) => void;
   councilPrompt: string;
   setCouncilPrompt: (prompt: string) => void;
   latestFlowRun: ExampleFlowRun | null;
@@ -2183,6 +2212,7 @@ function WorkflowStudio({
             codexBridgeStatus={codexBridgeStatus}
             claudeBridgeStatus={claudeBridgeStatus}
             backendMode={backendMode}
+            onSeatAgentChange={onWorkflowSeatAgentChange}
           />
         ) : (
           <SeatAssignmentPanel
@@ -2742,7 +2772,8 @@ function WorkflowRunnerPanel({
   providerReadiness,
   codexBridgeStatus,
   claudeBridgeStatus,
-  backendMode
+  backendMode,
+  onSeatAgentChange
 }: {
   workflow: WorkflowType;
   agents: AgentProfile[];
@@ -2751,6 +2782,7 @@ function WorkflowRunnerPanel({
   codexBridgeStatus: CodexBridgeStatus;
   claudeBridgeStatus: ClaudeBridgeStatus;
   backendMode: BackendMode;
+  onSeatAgentChange: (nodeId: string, agentId: string) => void;
 }) {
   return (
     <section className="seat-assignment-panel custom-runner-panel" aria-label="Custom workflow seat assignments">
@@ -2773,6 +2805,7 @@ function WorkflowRunnerPanel({
           workflow.nodes.map((node) => {
             const agent = node.agentId ? agents.find((candidate) => candidate.id === node.agentId) : null;
             const runner = inferredRunnerForWorkflowNode(node, agents, providerConfig);
+            const canChooseAgent = node.kind !== "input" && node.kind !== "human" && !isLocalReportWriterNode(node);
             const status = workflowSeatRunnerStatus(
               runner,
               providerReadiness,
@@ -2786,7 +2819,22 @@ function WorkflowRunnerPanel({
                   <strong>{node.label}</strong>
                   <small>{node.role || node.kind}</small>
                 </span>
-                <span>{agent?.name ?? (node.kind === "input" || node.kind === "human" ? "System" : "Unassigned")}</span>
+                {canChooseAgent ? (
+                  <select
+                    value={node.agentId ?? ""}
+                    onChange={(event) => onSeatAgentChange(node.id, event.currentTarget.value)}
+                    aria-label={`${node.label} assigned agent`}
+                  >
+                    <option value="">No assigned agent</option>
+                    {agents.map((candidate) => (
+                      <option key={candidate.id} value={candidate.id}>
+                        {candidate.name} · {candidate.model}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span>{agent?.name ?? "System"}</span>
+                )}
                 <span className={cx("seat-runner-status", status.tone)}>
                   <span className={cx("status-dot", status.tone)} />
                   {status.label} · {runnerDisplayName(runner, providerConfig)}
@@ -4544,6 +4592,18 @@ export function App() {
     }
   };
 
+  const handleWorkflowSeatAgentChange = (nodeId: string, agentId: string) => {
+    const next = workflowWithSeatAgent(selectedWorkflow, nodeId, agentId, availableAgents);
+    if (isCustomWorkflow(next)) {
+      handleUpdateWorkflow(next);
+    } else {
+      setSelectedWorkflow(next);
+    }
+    const node = next.nodes.find((candidate) => candidate.id === nodeId);
+    const agent = agentId ? availableAgents.find((candidate) => candidate.id === agentId) : null;
+    showToast(`${node?.label ?? "Seat"} now uses ${agent ? `${agent.name} · ${agent.model}` : "demo fallback"}`);
+  };
+
   const handleDeleteWorkflow = (workflowId: string) => {
     setCustomWorkflows((current) => {
       const next = current.filter((workflow) => workflow.id !== workflowId);
@@ -4837,23 +4897,39 @@ export function App() {
           label: dynamicWorkflow ? "Starting workflow" : "Starting live Council",
           detail: "Waiting for the first assigned runner to begin."
         });
-        unlistenProgress = await listenBackendFlowProgress((event) => {
+        try {
+          unlistenProgress = await listenBackendFlowProgress((event) => {
+            appendRunEvent({
+              nodeId: event.nodeId,
+              label: event.label,
+              detail: event.detail,
+              status: event.status,
+              elapsedMs: event.elapsedMs
+            });
+            setRunProgress({
+              activeNodeId: event.status === "started" ? event.nodeId : null,
+              completedNodeIds: event.completedNodeIds,
+              label: event.label,
+              detail: event.elapsedMs
+                ? `${event.detail} Elapsed: ${(event.elapsedMs / 1000).toFixed(1)}s.`
+                : event.detail
+            });
+          });
+        } catch (error) {
           appendRunEvent({
-            nodeId: event.nodeId,
-            label: event.label,
-            detail: event.detail,
-            status: event.status,
-            elapsedMs: event.elapsedMs
+            nodeId: "events",
+            label: "Progress listener unavailable",
+            detail: errorMessage(error, "Native progress events could not start; continuing the backend run."),
+            status: "failed",
+            elapsedMs: null
           });
           setRunProgress({
-            activeNodeId: event.status === "started" ? event.nodeId : null,
-            completedNodeIds: event.completedNodeIds,
-            label: event.label,
-            detail: event.elapsedMs
-              ? `${event.detail} Elapsed: ${(event.elapsedMs / 1000).toFixed(1)}s.`
-              : event.detail
+            activeNodeId: workflowSteps[0]?.nodeId ?? "run",
+            completedNodeIds: [],
+            label: "Running without live progress",
+            detail: "The backend run is continuing, but native progress events are unavailable."
           });
-        });
+        }
       } else {
         for (let index = 0; index < workflowSteps.length; index += 1) {
           if (cancelRunRequestedRef.current) throw new Error("Workflow run cancelled by user.");
@@ -5032,6 +5108,7 @@ export function App() {
             claudeBridgeStatus={claudeBridgeStatus}
             seatAssignments={seatAssignments}
             onSeatAssignmentChange={updateSeatAssignment}
+            onWorkflowSeatAgentChange={handleWorkflowSeatAgentChange}
             councilPrompt={councilPrompt}
             setCouncilPrompt={setCouncilPrompt}
             latestFlowRun={latestFlowRun}
