@@ -26,7 +26,7 @@ Browser mode should remain useful for inspection and demo. Native Tauri mode is 
 | Local report writer | Shipped | `scripts/report-writer.mjs` creates `run.json`, `report_manifest.json`, `report.md`, and `report.html`; report workflows visibly end with Local Report Writer. |
 | External provider support | Built, needs keyed native QA | OpenAI external mode has Keychain-backed API key storage, status checks, guarded missing-key errors, and OpenAI-compatible chat execution. It still needs a live keyed native run before calling it shipped. |
 | Release packaging | Built, needs signing setup | `npm run tauri:build` succeeds locally. CI, release docs, and version alignment are in place; signing/notarization credentials and packaged installer checks remain. |
-| GitHub issue backlog | Planned | No open issues currently track this roadmap. |
+| GitHub issue backlog | Shipped | Roadmap labels and issues are created. Open follow-ups: #1 native QA, #2 external provider keyed QA/usage receipts, #3 readiness action history, #4 signing/notarization. |
 
 ## Done: Native End-to-End QA
 
@@ -108,16 +108,23 @@ Acceptance checks:
 - README includes install/run guidance for a packaged app. **Built.**
 - Add a CI workflow for build, report tests, and Rust tests. **Built in `.github/workflows/ci.yml`.**
 
-## Next: GitHub Backlog
+## Done: GitHub Backlog
 
 Goal: mirror this roadmap into trackable GitHub issues.
 
 Acceptance checks:
 
-- Create issues for native E2E QA, external provider support, agent default policy UI, readiness actions, workflow expansion, release hardening, and CI.
-- Add labels such as `qa`, `provider`, `ui`, `safety`, `workflow`, `release`, and `docs`.
-- Keep issue descriptions tied to the acceptance checks above.
-- Close or update issues as each acceptance check becomes verified.
+- Create issues for native E2E QA, external provider support, agent default policy UI, readiness actions, workflow expansion, release hardening, and CI. **Built.**
+- Add labels such as `qa`, `provider`, `ui`, `safety`, `workflow`, `release`, and `docs`. **Built, plus `ci`.**
+- Keep issue descriptions tied to the acceptance checks above. **Built.**
+- Close or update issues as each acceptance check becomes verified. **Built; completed UI, workflow, and CI issues are closed.**
+
+Open follow-ups:
+
+- [#1 Complete native UI-triggered scan and bridge workflow QA](https://github.com/DrewBruce/AI-Command-Central/issues/1)
+- [#2 Live-key QA and usage receipts for OpenAI external provider](https://github.com/DrewBruce/AI-Command-Central/issues/2)
+- [#3 Log readiness action outcomes into project or run history](https://github.com/DrewBruce/AI-Command-Central/issues/3)
+- [#4 Finish macOS signing notarization and installer checks](https://github.com/DrewBruce/AI-Command-Central/issues/4)
 
 ## Verification Commands
 
